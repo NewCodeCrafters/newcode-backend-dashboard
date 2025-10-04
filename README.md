@@ -1,335 +1,324 @@
-# Django REST Framework Custom Authentication
+# Django Project
 
-A comprehensive authentication system for Django REST Framework using JWT tokens with automatic API documentation.
+A Django web application built with Python and managed using Poetry for dependency management.
 
-## Features
+## Table of Contents
 
-- JWT-based authentication using `rest_framework_simplejwt`
-- Ready-to-use authentication endpoints via `dj_rest_auth`
-- Automatic interactive API documentation with `drf_spectacular`
-- Swagger UI and ReDoc interfaces
-- Token refresh and blacklist capabilities
-- User registration, login, logout, and password management
+- [Prerequisites](#prerequisites)
+- [Installation](#installation)
+- [Configuration](#configuration)
+- [Running the Application](#running-the-application)
+- [Development](#development)
+- [Testing](#testing)
+- [Deployment](#deployment)
+- [Contributing](#contributing)
+- [License](#license)
 
-## Tech Stack
+## Prerequisites
 
-- Django REST Framework
-- drf-spectacular (API documentation)
-- rest_framework_simplejwt (JWT authentication)
-- dj-rest-auth (Authentication endpoints)
+Before you begin, ensure you have the following installed on your system:
+
+- **Python 3.8+**: Download from [python.org](https://www.python.org/downloads/)
+- **pip**: Usually comes with Python installation
+- **Git**: For version control
 
 ## Installation
 
-### 1. Install Required Packages
+Follow these steps to set up the project on your local machine:
+
+### 1. Clone the Repository
 
 ```bash
-pip install djangorestframework
-pip install djangorestframework-simplejwt
-pip install dj-rest-auth
-pip install drf-spectacular
+git clone https://github.com/NewCodeCrafters/newcode-backend-dashboard.git
+cd newcode-backend-dashboard
 ```
 
-### 2. Update Django Settings
+### 2. Create Virtual Environment
 
-Add the following to your `settings.py`:
+Create a Python virtual environment to isolate project dependencies:
 
-```python
-INSTALLED_APPS = [
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    
-    # Third-party apps
-    'rest_framework',
-    'rest_framework.authtoken',
-    'drf_spectacular',
-    'rest_framework_simplejwt',
-    'dj_rest_auth',
-    
-    # Your apps
-    # 'your_app',
-]
-
-# REST Framework Configuration
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ),
-    'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated',
-    ),
-    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
-}
-
-# JWT Settings
-from datetime import timedelta
-
-SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
-    'ROTATE_REFRESH_TOKENS': True,
-    'BLACKLIST_AFTER_ROTATION': True,
-    'UPDATE_LAST_LOGIN': True,
-    'ALGORITHM': 'HS256',
-    'SIGNING_KEY': SECRET_KEY,
-    'AUTH_HEADER_TYPES': ('Bearer',),
-    'AUTH_HEADER_NAME': 'HTTP_AUTHORIZATION',
-    'USER_ID_FIELD': 'id',
-    'USER_ID_CLAIM': 'user_id',
-    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
-    'TOKEN_TYPE_CLAIM': 'token_type',
-}
-
-# dj-rest-auth Configuration
-REST_AUTH = {
-    'USE_JWT': True,
-    'JWT_AUTH_COOKIE': 'auth-token',
-    'JWT_AUTH_REFRESH_COOKIE': 'refresh-token',
-    'JWT_AUTH_HTTPONLY': False,
-}
-
-# Spectacular Settings (API Documentation)
-SPECTACULAR_SETTINGS = {
-    'TITLE': 'Your API Documentation',
-    'DESCRIPTION': 'Custom authentication API with JWT tokens',
-    'VERSION': '1.0.0',
-    'SERVE_INCLUDE_SCHEMA': False,
-    'COMPONENT_SPLIT_REQUEST': True,
-    'SCHEMA_PATH_PREFIX': r'/api/v1',
-    
-    # JWT Authentication Configuration
-    'SECURITY': [
-        {
-            'Bearer': {
-                'type': 'http',
-                'scheme': 'bearer',
-                'bearerFormat': 'JWT',
-            }
-        }
-    ],
-    
-    # Swagger UI Configuration
-    'SWAGGER_UI_SETTINGS': {
-        'deepLinking': True,
-        'persistAuthorization': True,
-        'displayOperationId': True,
-        'filter': True,
-    },
-    
-    # Additional Settings
-    'APPEND_COMPONENTS': {
-        'securitySchemes': {
-            'Bearer': {
-                'type': 'http',
-                'scheme': 'bearer',
-                'bearerFormat': 'JWT',
-            }
-        }
-    },
-}
+```bash
+python -m venv venv
 ```
 
-### 3. Configure URLs
+This command creates a new directory called `venv` containing the virtual environment.
 
-Update your project's `urls.py`:
+### 3. Activate Virtual Environment
 
-```python
-from django.contrib import admin
-from django.urls import path, include
-from drf_spectacular.views import (
-    SpectacularAPIView,
-    SpectacularSwaggerView,
-    SpectacularRedocView,
-)
-from rest_framework_simplejwt.views import (
-    TokenRefreshView,
-    TokenVerifyView,
-)
+Activate the virtual environment using the appropriate command for your operating system:
 
-urlpatterns = [
-    path('admin/', admin.site.urls),
-    
-    # API Documentation
-    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
-    path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
-    path('api/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
-    
-    # Authentication Endpoints
-    path('api/auth/', include('dj_rest_auth.urls')),
-    path('api/auth/registration/', include('dj_rest_auth.registration.urls')),
-    
-    # JWT Token Endpoints
-    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    path('api/token/verify/', TokenVerifyView.as_view(), name='token_verify'),
-    
-    # Your API endpoints
-    # path('api/v1/', include('your_app.urls')),
-]
+**On Windows:**
+```bash
+venv\Scripts\activate
 ```
 
-### 4. Run Migrations
+**On macOS/Linux:**
+```bash
+source venv/bin/activate
+```
+
+You should see `(venv)` prefix in your terminal prompt, indicating the virtual environment is active.
+
+### 4. Install Poetry
+
+Install Poetry (Python dependency management tool) from the requirements.txt file:
+
+```bash
+pip install -r requirements.txt
+```
+
+This installs Poetry and any other essential tools specified in requirements.txt.
+
+### 5. Install Project Dependencies
+
+Use Poetry to install all project dependencies defined in `pyproject.toml`:
+
+```bash
+poetry install --no-root
+```
+
+The `--no-root` flag prevents Poetry from installing the project itself as a package, which is typical for Django applications.
+
+## Configuration
+
+### Environment Variables
+
+Create a `.env` file in the project root directory to store environment-specific variables:
+
+```bash
+cp .env.example .env
+```
+
+Edit the `.env` file and configure the following variables:
+
+```env
+DEBUG=True
+SECRET_KEY=your-secret-key-here
+DATABASE_URL=sqlite:///db.sqlite3
+ALLOWED_HOSTS=localhost,127.0.0.1
+```
+
+**Important:** Never commit your `.env` file to version control. Ensure it's listed in `.gitignore`.
+
+### Database Setup
+
+Run migrations to set up your database schema:
 
 ```bash
 python manage.py migrate
 ```
 
-## API Endpoints
+### Create Superuser (Optional)
 
-### Authentication Endpoints
-
-| Endpoint | Method | Description | Authentication Required |
-|----------|--------|-------------|------------------------|
-| `/api/auth/login/` | POST | Login with username/email and password | No |
-| `/api/auth/logout/` | POST | Logout (blacklist refresh token) | Yes |
-| `/api/auth/user/` | GET | Get current user details | Yes |
-| `/api/auth/password/reset/` | POST | Request password reset email | No |
-| `/api/auth/password/reset/confirm/` | POST | Confirm password reset | No |
-| `/api/auth/password/change/` | POST | Change password | Yes |
-| `/api/token/refresh/` | POST | Refresh access token | No (requires refresh token) |
-| `/api/token/verify/` | POST | Verify token validity | No |
-
-### Registration Endpoints (Optional)
-
-If you include `dj_rest_auth.registration`:
-
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/auth/registration/` | POST | Register new user |
-| `/api/auth/registration/verify-email/` | POST | Verify email address |
-
-## Usage Examples
-
-### 1. Login
+Create an admin user to access the Django admin interface:
 
 ```bash
-curl -X POST http://localhost:8000/api/auth/login/ \
-  -H "Content-Type: application/json" \
-  -d '{
-    "username": "your_username",
-    "password": "your_password"
-  }'
+python manage.py createsuperuser
 ```
 
-Response:
-```json
-{
-  "access": "eyJ0eXAiOiJKV1QiLCJhbGc...",
-  "refresh": "eyJ0eXAiOiJKV1QiLCJhbGc...",
-  "user": {
-    "pk": 1,
-    "username": "your_username",
-    "email": "user@example.com"
-  }
-}
-```
+Follow the prompts to set username, email, and password.
 
-### 2. Access Protected Endpoint
+### Collect Static Files (Production)
+
+If deploying to production, collect static files:
 
 ```bash
-curl -X GET http://localhost:8000/api/protected-endpoint/ \
-  -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGc..."
+python manage.py collectstatic --no-input
 ```
 
-### 3. Refresh Token
+## Running the Application
+
+### Development Server
+
+Start the Django development server:
 
 ```bash
-curl -X POST http://localhost:8000/api/token/refresh/ \
-  -H "Content-Type: application/json" \
-  -d '{
-    "refresh": "eyJ0eXAiOiJKV1QiLCJhbGc..."
-  }'
+python manage.py runserver
 ```
 
-### 4. Logout
+The application will be available at `http://127.0.0.1:8000/`
+
+To run on a different port:
 
 ```bash
-curl -X POST http://localhost:8000/api/auth/logout/ \
-  -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGc..." \
-  -H "Content-Type: application/json" \
-  -d '{
-    "refresh": "eyJ0eXAiOiJKV1QiLCJhbGc..."
-  }'
+python manage.py runserver 8080
 ```
 
-## API Documentation
+To make the server accessible from other devices on your network:
 
-Once the server is running, access the interactive API documentation:
-
-- **Swagger UI**: http://localhost:8000/api/docs/
-- **ReDoc**: http://localhost:8000/api/redoc/
-- **OpenAPI Schema**: http://localhost:8000/api/schema/
-
-### Using Swagger UI
-
-1. Navigate to http://localhost:8000/api/docs/
-2. Click on `/api/auth/login/` endpoint
-3. Click "Try it out"
-4. Enter credentials and execute
-5. Copy the `access` token from the response
-6. Click the "Authorize" button at the top
-7. Enter: `Bearer <your-access-token>`
-8. Now you can test all protected endpoints
-
-## Custom Authentication Views
-
-Create custom views in your app:
-
-```python
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
-from drf_spectacular.utils import extend_schema, OpenApiParameter
-
-class ProfileView(APIView):
-    permission_classes = [IsAuthenticated]
-    
-    @extend_schema(
-        summary="Get user profile",
-        description="Retrieve the authenticated user's profile information",
-        responses={200: {'type': 'object'}},
-    )
-    def get(self, request):
-        user = request.user
-        return Response({
-            'username': user.username,
-            'email': user.email,
-            'first_name': user.first_name,
-            'last_name': user.last_name,
-        })
+```bash
+python manage.py runserver 0.0.0.0:8000
 ```
 
-## Security Considerations
+### Access Admin Interface
 
-1. **HTTPS**: Always use HTTPS in production
-2. **Secret Key**: Keep your `SECRET_KEY` secure and never commit it to version control
-3. **Token Lifetime**: Adjust token lifetimes based on your security requirements
-4. **CORS**: Configure CORS properly if your frontend is on a different domain
-5. **Token Storage**: Store tokens securely in the client (avoid localStorage for sensitive apps)
+Navigate to `http://127.0.0.1:8000/admin/` and log in with your superuser credentials.
+
+## Development
+
+### Project Structure
+
+```
+project-root/
+├── venv/                  # Virtual environment (not in git)
+├── manage.py              # Django management script
+├── requirements.txt       # Poetry installation file
+├── pyproject.toml         # Poetry dependencies
+├── poetry.lock            # Locked dependency versions
+├── .env                   # Environment variables (not in git)
+├── .env.example           # Example environment file
+├── app_name/              # Django app directory
+│   ├── migrations/        # Database migrations
+│   ├── models.py          # Database models
+│   ├── views.py           # View logic
+│   ├── urls.py            # URL routing
+│   └── tests.py           # Test cases
+└── project_name/          # Project settings directory
+    ├── settings.py        # Django settings
+    ├── urls.py            # Root URL configuration
+    └── wsgi.py            # WSGI configuration
+```
+
+### Adding Dependencies
+
+To add a new Python package to the project:
+
+```bash
+poetry add package-name
+```
+
+For development dependencies only:
+
+```bash
+poetry add --group dev package-name
+```
+
+### Creating a New Django App
+
+```bash
+python manage.py startapp app_name
+```
+
+Remember to add the new app to `INSTALLED_APPS` in `settings.py`.
+
+### Making Migrations
+
+After modifying models, create migration files:
+
+```bash
+python manage.py makemigrations
+```
+
+Apply migrations to the database:
+
+```bash
+python manage.py migrate
+```
+
+## Testing
+
+Run the test suite:
+
+```bash
+python manage.py test
+```
+
+Run tests with coverage:
+
+```bash
+poetry run coverage run --source='.' manage.py test
+poetry run coverage report
+```
+
+Run tests for a specific app:
+
+```bash
+python manage.py test app_name
+```
+
+## Deployment
+
+### Pre-deployment Checklist
+
+1. Set `DEBUG=False` in production environment
+2. Configure a secure `SECRET_KEY`
+3. Set up proper `ALLOWED_HOSTS`
+4. Use a production-grade database (PostgreSQL recommended)
+5. Configure static file serving
+6. Set up HTTPS/SSL certificates
+7. Configure logging and monitoring
+
+### Environment-Specific Settings
+
+Consider using different settings files for different environments:
+
+```bash
+python manage.py runserver --settings=project_name.settings.production
+```
+
+### WSGI Deployment
+
+The project includes a WSGI configuration file for deployment with servers like Gunicorn, uWSGI, or mod_wsgi.
+
+Example with Gunicorn:
+
+```bash
+poetry add gunicorn
+gunicorn project_name.wsgi:application --bind 0.0.0.0:8000
+```
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
 ## Troubleshooting
 
-### Issue: "Authentication credentials were not provided"
-- Ensure you're including the Authorization header: `Authorization: Bearer <token>`
-- Check that the token hasn't expired
+### Virtual Environment Issues
 
-### Issue: Token blacklist not working
-- Add `rest_framework_simplejwt.token_blacklist` to INSTALLED_APPS
-- Run migrations: `python manage.py migrate`
+If you encounter issues with the virtual environment, try:
 
-### Issue: Documentation not showing authentication
-- Verify `DEFAULT_SCHEMA_CLASS` is set to `drf_spectacular.openapi.AutoSchema`
-- Check that SPECTACULAR_SETTINGS includes the security configuration
+```bash
+deactivate  # If already in a venv
+rm -rf venv  # Remove existing venv
+python -m venv venv  # Recreate
+```
 
-## Additional Resources
+### Poetry Installation Issues
 
-- [DRF Spectacular Documentation](https://drf-spectacular.readthedocs.io/)
-- [Simple JWT Documentation](https://django-rest-framework-simplejwt.readthedocs.io/)
-- [dj-rest-auth Documentation](https://dj-rest-auth.readthedocs.io/)
-- [Django REST Framework Documentation](https://www.django-rest-framework.org/)
+If Poetry doesn't install correctly from requirements.txt, install it directly:
+
+```bash
+pip install poetry
+```
+
+### Database Errors
+
+If you encounter database errors, try:
+
+```bash
+python manage.py migrate --run-syncdb
+```
+
+### Port Already in Use
+
+If port 8000 is already in use:
+
+```bash
+python manage.py runserver 8080
+```
 
 ## License
 
-This project configuration is open source and available under the MIT License.# newcode-backend-dashboard
+[Specify your license here]
+
+## Contact
+
+[Your contact information or project maintainer details]
+
+---
+
+**Note:** Always ensure your virtual environment is activated before running any Django or Poetry commands. You can verify this by checking for the `(venv)` prefix in your terminal.

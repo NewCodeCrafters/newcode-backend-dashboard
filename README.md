@@ -29,8 +29,8 @@ Follow these steps to set up the project on your local machine:
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/NewCodeCrafters/newcode-backend-dashboard.git
-cd newcode-backend-dashboard
+git clone <repository-url>
+cd <project-directory>
 ```
 
 ### 2. Create Virtual Environment
@@ -83,7 +83,7 @@ The `--no-root` flag prevents Poetry from installing the project itself as a pac
 
 ### Environment Variables
 
-Create a `.env` file in the project root directory to store environment-specific variables:
+The project uses split settings for different environments (development, staging, production). Create a `.env` file in the project root directory to store environment-specific variables:
 
 ```bash
 cp .env.example .env
@@ -92,6 +92,7 @@ cp .env.example .env
 Edit the `.env` file and configure the following variables:
 
 ```env
+DJANGO_SETTINGS_MODULE=core.settings.dev
 DEBUG=True
 SECRET_KEY=your-secret-key-here
 DATABASE_URL=sqlite:///db.sqlite3
@@ -100,12 +101,23 @@ ALLOWED_HOSTS=localhost,127.0.0.1
 
 **Important:** Never commit your `.env` file to version control. Ensure it's listed in `.gitignore`.
 
+### Settings Structure
+
+The project uses a modular settings structure:
+
+- **`base.py`**: Contains common settings shared across all environments
+- **`dev.py`**: Development-specific settings (imports from base.py)
+- **`stage.py`**: Staging environment settings (imports from base.py)
+- **`prod.py`**: Production settings (imports from base.py)
+
+To specify which settings to use, set the `DJANGO_SETTINGS_MODULE` environment variable or use the `--settings` flag.
+
 ### Database Setup
 
 Run migrations to set up your database schema:
 
 ```bash
-python manage.py migrate
+python manage.py migrate --settings=core.settings.dev
 ```
 
 ### Create Superuser (Optional)
@@ -113,7 +125,7 @@ python manage.py migrate
 Create an admin user to access the Django admin interface:
 
 ```bash
-python manage.py createsuperuser
+python manage.py createsuperuser --settings=core.settings.dev
 ```
 
 Follow the prompts to set username, email, and password.
@@ -123,16 +135,26 @@ Follow the prompts to set username, email, and password.
 If deploying to production, collect static files:
 
 ```bash
-python manage.py collectstatic --no-input
+python manage.py collectstatic --no-input --settings=core.settings.prod
 ```
 
 ## Running the Application
 
 ### Development Server
 
-Start the Django development server:
+Start the Django development server using development settings:
 
 ```bash
+python manage.py runserver --settings=core.settings.dev
+```
+
+Or set the environment variable:
+
+```bash
+export DJANGO_SETTINGS_MODULE=core.settings.dev  # On macOS/Linux
+set DJANGO_SETTINGS_MODULE=core.settings.dev     # On Windows CMD
+$env:DJANGO_SETTINGS_MODULE="core.settings.dev"  # On Windows PowerShell
+
 python manage.py runserver
 ```
 
@@ -141,13 +163,13 @@ The application will be available at `http://127.0.0.1:8000/`
 To run on a different port:
 
 ```bash
-python manage.py runserver 8080
+python manage.py runserver 8080 --settings=core.settings.dev
 ```
 
 To make the server accessible from other devices on your network:
 
 ```bash
-python manage.py runserver 0.0.0.0:8000
+python manage.py runserver 0.0.0.0:8000 --settings=core.settings.dev
 ```
 
 ### Access Admin Interface
@@ -159,24 +181,64 @@ Navigate to `http://127.0.0.1:8000/admin/` and log in with your superuser creden
 ### Project Structure
 
 ```
-project-root/
+.
 ├── venv/                  # Virtual environment (not in git)
+├── core/                  # Django project settings directory
+│   ├── __init__.py
+│   ├── settings/          # Split settings for different environments
+│   │   ├── __init__.py
+│   │   ├── base.py        # Base settings (shared across all environments)
+│   │   ├── dev.py         # Development settings
+│   │   ├── stage.py       # Staging settings
+│   │   └── prod.py        # Production settings
+│   ├── urls.py            # Root URL configuration
+│   ├── asgi.py            # ASGI configuration
+│   └── wsgi.py            # WSGI configuration
+├── apps/                  # Django applications directory
+│   ├── __init__.py
+│   ├── base/              # Base app
+│   │   ├── __init__.py
+│   │   ├── admin.py
+│   │   ├── apps.py
+│   │   ├── migrations/
+│   │   ├── models.py
+│   │   ├── views.py
+│   │   ├── urls.py
+│   │   └── tests.py
+│   ├── batch/             # Batch management app
+│   │   ├── __init__.py
+│   │   ├── admin.py
+│   │   ├── apps.py
+│   │   ├── migrations/
+│   │   ├── models.py
+│   │   ├── views.py
+│   │   ├── urls.py
+│   │   └── tests.py
+│   ├── student/           # Student management app
+│   │   ├── __init__.py
+│   │   ├── admin.py
+│   │   ├── apps.py
+│   │   ├── migrations/
+│   │   ├── models.py
+│   │   ├── views.py
+│   │   ├── urls.py
+│   │   └── tests.py
+│   └── users/             # User management app
+│       ├── __init__.py
+│       ├── admin.py
+│       ├── apps.py
+│       ├── migrations/
+│       ├── models.py
+│       ├── views.py
+│       ├── urls.py
+│       └── tests.py
 ├── manage.py              # Django management script
 ├── requirements.txt       # Poetry installation file
 ├── pyproject.toml         # Poetry dependencies
 ├── poetry.lock            # Locked dependency versions
 ├── .env                   # Environment variables (not in git)
 ├── .env.example           # Example environment file
-├── app_name/              # Django app directory
-│   ├── migrations/        # Database migrations
-│   ├── models.py          # Database models
-│   ├── views.py           # View logic
-│   ├── urls.py            # URL routing
-│   └── tests.py           # Test cases
-└── project_name/          # Project settings directory
-    ├── settings.py        # Django settings
-    ├── urls.py            # Root URL configuration
-    └── wsgi.py            # WSGI configuration
+└── db.sqlite3             # SQLite database (not in git)
 ```
 
 ### Adding Dependencies
@@ -195,24 +257,41 @@ poetry add --group dev package-name
 
 ### Creating a New Django App
 
+Create a new app inside the `apps` directory:
+
 ```bash
-python manage.py startapp app_name
+cd apps
+python ../manage.py startapp app_name
+cd ..
 ```
 
-Remember to add the new app to `INSTALLED_APPS` in `settings.py`.
+Or create it from the root directory:
+
+```bash
+python manage.py startapp app_name apps/app_name
+```
+
+Remember to:
+1. Add the new app to `INSTALLED_APPS` in `core/settings/base.py` (use the format `apps.app_name`)
+2. Update the app's `apps.py` to reflect the correct path:
+   ```python
+   class AppNameConfig(AppConfig):
+       default_auto_field = 'django.db.models.BigAutoField'
+       name = 'apps.app_name'
+   ```
 
 ### Making Migrations
 
 After modifying models, create migration files:
 
 ```bash
-python manage.py makemigrations
+python manage.py makemigrations --settings=core.settings.dev
 ```
 
 Apply migrations to the database:
 
 ```bash
-python manage.py migrate
+python manage.py migrate --settings=core.settings.dev
 ```
 
 ## Testing
@@ -220,29 +299,30 @@ python manage.py migrate
 Run the test suite:
 
 ```bash
-python manage.py test
+python manage.py test --settings=core.settings.dev
 ```
 
 Run tests with coverage:
 
 ```bash
-poetry run coverage run --source='.' manage.py test
+poetry run coverage run --source='.' manage.py test --settings=core.settings.dev
 poetry run coverage report
 ```
 
 Run tests for a specific app:
 
 ```bash
-python manage.py test app_name
+python manage.py test apps.student --settings=core.settings.dev
+python manage.py test apps.users --settings=core.settings.dev
 ```
 
 ## Deployment
 
 ### Pre-deployment Checklist
 
-1. Set `DEBUG=False` in production environment
-2. Configure a secure `SECRET_KEY`
-3. Set up proper `ALLOWED_HOSTS`
+1. Set `DEBUG=False` in `core/settings/prod.py`
+2. Configure a secure `SECRET_KEY` in production environment
+3. Set up proper `ALLOWED_HOSTS` in `core/settings/prod.py`
 4. Use a production-grade database (PostgreSQL recommended)
 5. Configure static file serving
 6. Set up HTTPS/SSL certificates
@@ -250,10 +330,21 @@ python manage.py test app_name
 
 ### Environment-Specific Settings
 
-Consider using different settings files for different environments:
+The project uses different settings modules for each environment:
 
+**Development:**
 ```bash
-python manage.py runserver --settings=project_name.settings.production
+python manage.py runserver --settings=core.settings.dev
+```
+
+**Staging:**
+```bash
+python manage.py runserver --settings=core.settings.stage
+```
+
+**Production:**
+```bash
+gunicorn core.wsgi:application --bind 0.0.0.0:8000 --env DJANGO_SETTINGS_MODULE=core.settings.prod
 ```
 
 ### WSGI Deployment
@@ -264,7 +355,7 @@ Example with Gunicorn:
 
 ```bash
 poetry add gunicorn
-gunicorn project_name.wsgi:application --bind 0.0.0.0:8000
+gunicorn core.wsgi:application --bind 0.0.0.0:8000
 ```
 
 ## Contributing

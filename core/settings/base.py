@@ -33,6 +33,8 @@ DJANGO_APPS = [
 ]
 CUSTOM_APPS = [
     "apps.users",
+    'apps.students',
+    'apps.batch',
 ]
 
 THIRD_PARTY_APPS = [

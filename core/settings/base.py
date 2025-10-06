@@ -35,6 +35,9 @@ CUSTOM_APPS = [
     "apps.users",
     'apps.students',
     'apps.batch',
+    "apps.payments",
+    "apps.installment"
+
 ]
 
 THIRD_PARTY_APPS = [

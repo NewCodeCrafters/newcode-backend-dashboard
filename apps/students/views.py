@@ -92,11 +92,13 @@ class StudentBatchEnrollmentView(generics.GenericAPIView):
         responses={201: StudentBatchEnrollmentSerializer()},
     )
     def post(self, request):
+        # Get the logged-in user's student profile
+        student_profile = StudentProfile.objects.get(user=request.user)
+
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save() 
+        serializer.save(student=student_profile)  # ✅ attach the student automatically
         return Response(serializer.data, status=status.HTTP_201_CREATED)
-
 
 
 

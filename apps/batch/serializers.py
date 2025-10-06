@@ -1,10 +1,11 @@
 from rest_framework import serializers
 from .models import Batch
 from django.conf import settings
+from apps.users.models import User
 
 class BatchSerializers(serializers.ModelSerializer):
     created_by = serializers.StringRelatedField(read_only=True)
-    created_by_id = serializers.PrimaryKeyRelatedField(queryset=settings.AUTH_USER_MODEL.objects.all(), sources='created_by',write_only=True, required=False)
+    created_by_id = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(), source='created_by',write_only=True, required=False)
 
     class Meta:
         model = Batch

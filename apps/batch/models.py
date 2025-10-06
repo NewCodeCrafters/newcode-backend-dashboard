@@ -16,6 +16,7 @@ class Batch(BaseModel):
         on_delete=models.CASCADE,
         related_name="created_batches"
     )
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         constraints = [

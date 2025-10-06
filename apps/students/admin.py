@@ -2,16 +2,6 @@ from django.contrib import admin
 from .models import StudentBatchEnrollment, StudentProfile
 from django import forms
 
-class ProfileForm(forms.ModelForm):
-    class Meta:
-        model = StudentProfile
-        fields = '__all__'
-        widgets = {
-            'dob': forms.DateInput(
-                attrs={'type': 'date'},
-                format='%Y-%m-%d'
-            ),
-        }
 
 
 @admin.register(StudentProfile)

@@ -40,8 +40,8 @@ class StudentProfile(BaseModel):
     city = models.CharField(max_length=100, null=True, blank=True)
     state = models.CharField(max_length=100, null=True, blank=True)
     profile_picture = models.ImageField(upload_to="student_profiles/", null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True)  
+    updated_at = models.DateTimeField(auto_now=True)      
 
     class Meta:
         ordering = ["user__first_name"]
@@ -74,7 +74,7 @@ class StudentBatchEnrollment(BaseModel):
     final_fee = models.DecimalField(max_digits=10, decimal_places=2, editable=False)
 
     class Meta:
-        pass
+        ordering = ["-enrollment_date"]
 
     def __str__(self):
         return f"{self.student.get_full_name()} - {self.batch.batch_name} ({self.status})"

@@ -1,12 +1,18 @@
 from rest_framework import serializers
-from django.conf import settings
+from django.contrib.auth import get_user_model
 from .models import StudentProfile, StudentBatchEnrollment
 from apps.batch.models import Batch
 
+User = get_user_model()
+
 
 class StudentProfileSerializer(serializers.ModelSerializer):
-    user = serializers.StringRelatedField(read_only=True)  
-    user_id = serializers.PrimaryKeyRelatedField(queryset=settings.AUTH_USER_MODEL.objects.all(), source="user", write_only=True)
+    user = serializers.StringRelatedField(read_only=True)
+    user_id = serializers.PrimaryKeyRelatedField(
+        queryset=User.objects.all(),
+        source="user",
+        write_only=True
+    )
 
     class Meta:
         model = StudentProfile
@@ -28,11 +34,19 @@ class StudentProfileSerializer(serializers.ModelSerializer):
 
 
 class StudentBatchEnrollmentSerializer(serializers.ModelSerializer):
-    student = serializers.StringRelatedField(read_only=True)  # shows user full_name
-    student_id = serializers.PrimaryKeyRelatedField(queryset=settings.AUTH_USER_MODEL.objects.all(), source="student", write_only=True)
+    student = serializers.StringRelatedField(read_only=True)
+    student_id = serializers.PrimaryKeyRelatedField(
+        queryset=User.objects.all(),
+        source="student",
+        write_only=True
+    )
 
-    batch = serializers.StringRelatedField(read_only=True)  # shows batch name
-    batch_id = serializers.PrimaryKeyRelatedField(queryset=Batch.objects.all(), source="batch", write_only=True)
+    batch = serializers.StringRelatedField(read_only=True)
+    batch_id = serializers.PrimaryKeyRelatedField(
+        queryset=Batch.objects.all(),
+        source="batch",
+        write_only=True
+    )
 
     class Meta:
         model = StudentBatchEnrollment
@@ -46,13 +60,17 @@ class StudentBatchEnrollmentSerializer(serializers.ModelSerializer):
             "total_fee",
             "discount_amount",
             "final_fee",
-            "created_at",
-            "updated_at",
+
         ]
-        read_only_fields = ["enrollment_date", "created_at", "updated_at", "final_fee"]
+        read_only_fields = ["enrollment_date",  "final_fee"]
+
 
 class StudentProfileWithEnrollmentsSerializer(StudentProfileSerializer):
-    enrollments = StudentBatchEnrollmentSerializer(many=True, read_only=True, source="user.enrollments")
+    enrollments = StudentBatchEnrollmentSerializer(
+        many=True,
+        read_only=True,
+        source="user.enrollments"
+    )
 
     class Meta(StudentProfileSerializer.Meta):
         fields = StudentProfileSerializer.Meta.fields + ["enrollments"]

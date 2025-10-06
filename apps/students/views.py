@@ -68,6 +68,38 @@ class StudentProfileView(generics.GenericAPIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
+class StudentBatchEnrollmentView(generics.GenericAPIView):
+    serializer_class = StudentBatchEnrollmentSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return StudentBatchEnrollment.objects.filter(student__user=self.request.user)
+
+    @swagger_auto_schema(
+        operation_summary="List all batch enrollments for the logged-in student",
+        operation_description="Displays all batches that the authenticated student is enrolled in.",
+        responses={200: StudentBatchEnrollmentSerializer(many=True)},
+    )
+    def get(self, request):
+        enrollments = self.get_queryset()
+        serializer = self.get_serializer(enrollments, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @swagger_auto_schema(
+        operation_summary="Enroll a student in a batch",
+        operation_description="Allows a student to enroll in a specific batch by providing batch Id and profile id.",
+        request_body=StudentBatchEnrollmentSerializer,
+        responses={201: StudentBatchEnrollmentSerializer()},
+    )
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save() 
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+
+
 # ADMIN VIEW 
 class AdminStudentProfileView(generics.GenericAPIView):
     queryset = StudentProfile.objects.all()
@@ -92,6 +124,35 @@ class AdminStudentProfileView(generics.GenericAPIView):
     )
     def post(self, request):
         serializer = StudentProfileSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+#  Admin enrollment view for admin onlyyyyyyy
+class AdminStudentBatchEnrollmentView(generics.GenericAPIView):
+    queryset = StudentBatchEnrollment.objects.all()
+    serializer_class = StudentBatchEnrollmentSerializer
+    permission_classes = [permissions.IsAdminUser]
+
+    @swagger_auto_schema(
+        operation_summary="List all student batch enrollments (Admin only)",
+        operation_description="Admin can view all student-to-batch enrollments in the system.",
+        responses={200: StudentBatchEnrollmentSerializer(many=True)},
+    )
+    def get(self, request):
+        enrollments = self.get_queryset()
+        serializer = self.get_serializer(enrollments, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @swagger_auto_schema(
+        operation_summary="Manually enroll a student in a batch (Admin only)",
+        operation_description="Admin can enroll any student into a batch by providing student_profile_id and batch_id.",
+        request_body=StudentBatchEnrollmentSerializer,
+        responses={201: StudentBatchEnrollmentSerializer()},
+    )
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)

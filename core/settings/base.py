@@ -36,7 +36,8 @@ CUSTOM_APPS = [
     'apps.students',
     'apps.batch',
     "apps.payments",
-    "apps.installment"
+    "apps.installment",
+    "apps.notifications"
 
 ]
 

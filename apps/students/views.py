@@ -3,14 +3,10 @@ from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from drf_yasg.utils import swagger_auto_schema
 from .models import StudentBatchEnrollment, StudentProfile
-from .serializers import (
-    StudentBatchEnrollmentSerializer,
-    StudentProfileSerializer,
-    StudentProfileWithEnrollmentsSerializer,
-)
+from .serializers import StudentBatchEnrollmentSerializer,StudentProfileSerializer,StudentProfileWithEnrollmentsSerializer
 
 #STUDENT PROFILE 
-class StudentProfileView(generics.GenericAPIView):
+class StudentProfileView(generics.RetrieveUpdateDestroyAPIView):
     queryset = StudentProfile.objects.all()
     serializer_class = StudentProfileSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -92,12 +88,11 @@ class StudentBatchEnrollmentView(generics.GenericAPIView):
         responses={201: StudentBatchEnrollmentSerializer()},
     )
     def post(self, request):
-        # Get the logged-in user's student profile
         student_profile = StudentProfile.objects.get(user=request.user)
 
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save(student=student_profile)  # ✅ attach the student automatically
+        serializer.save(student=student_profile)  
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
@@ -138,7 +133,7 @@ class AdminStudentBatchEnrollmentView(generics.GenericAPIView):
     permission_classes = [permissions.IsAdminUser]
 
     @swagger_auto_schema(
-        operation_summary="List all student batch enrollments (Admin only)",
+        operation_summary="List all student batch enrollments admin only",
         operation_description="Admin can view all student-to-batch enrollments in the system.",
         responses={200: StudentBatchEnrollmentSerializer(many=True)},
     )
@@ -148,7 +143,7 @@ class AdminStudentBatchEnrollmentView(generics.GenericAPIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @swagger_auto_schema(
-        operation_summary="Manually enroll a student in a batch (Admin only)",
+        operation_summary="Manually enroll a student in a batch admni only",
         operation_description="Admin can enroll any student into a batch by providing student_profile_id and batch_id.",
         request_body=StudentBatchEnrollmentSerializer,
         responses={201: StudentBatchEnrollmentSerializer()},

@@ -22,4 +22,6 @@ urlpatterns = [
     path('batches/', include('apps.batch.urls')),
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('api/batches/', include('apps.batch.urls')),
+    path("notifications/", include("apps.notifications.urls")),
 ]

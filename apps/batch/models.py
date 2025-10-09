@@ -1,6 +1,7 @@
 from django.db import models
 from django.conf import settings
-from apps.base.models import BaseModel  
+from apps.base.models import BaseModel 
+from django.utils import timezone
 
 
 class Batch(BaseModel):
@@ -16,8 +17,8 @@ class Batch(BaseModel):
         on_delete=models.CASCADE,
         related_name="created_batches"
     )
+    created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
-
     class Meta:
         constraints = [
             models.CheckConstraint(

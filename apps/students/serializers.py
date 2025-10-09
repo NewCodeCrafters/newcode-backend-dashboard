@@ -31,6 +31,7 @@ class StudentProfileSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
         read_only_fields = ["student_id", "created_at", "updated_at"]
+        depth = 1 
 
 
 class StudentBatchEnrollmentSerializer(serializers.ModelSerializer):

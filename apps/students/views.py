@@ -223,3 +223,57 @@ class AdminStudentBatchEnrollmentView(generics.GenericAPIView):
 #             return Response({"error": "Profile not found"}, status=status.HTTP_404_NOT_FOUND)
 #         profile.delete()
 #         return Response({"message": "Profile deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
+
+
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
+
+from .models import StudentProfile
+from .serializers import StudentProfileSerializer
+
+
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
+from apps.students.models import StudentProfile
+from apps.students.serializers import StudentProfileSerializer
+
+
+class GetStudentByUUIDView(APIView):
+    """
+    Retrieve a student's profile using their UUID-based student_id (e.g. STD-5C3DF1)
+    """
+
+    @swagger_auto_schema(
+        manual_parameters=[
+            openapi.Parameter(
+                "student_id",
+                openapi.IN_PATH,
+                description="UUID-based student ID (e.g., STD-5C3DF1)",
+                type=openapi.TYPE_STRING,
+                required=True,
+            )
+        ],
+        responses={
+            200: openapi.Response("Student profile retrieved successfully", StudentProfileSerializer),
+            404: "Student not found",
+        },
+    )
+    def get(self, request, student_id):
+        try:
+            student = StudentProfile.objects.get(student_id=student_id)
+            serializer = StudentProfileSerializer(student)
+            return Response(
+                {"message": "Student profile retrieved successfully", "data": serializer.data},
+                status=status.HTTP_200_OK
+            )
+        except StudentProfile.DoesNotExist:
+            return Response(
+                {"error": f"Student with ID '{student_id}' not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )

@@ -1,146 +1,58 @@
-<<<<<<< HEAD
-from django.shortcuts import render
-from .serializers import BatchSerializers
-from .models import Batch
+from rest_framework import generics, permissions, status
 from rest_framework.response import Response
-from rest_framework import permissions, status, generics
 from drf_yasg.utils import swagger_auto_schema
 from datetime import date
+from .models import Batch
+from .serializers import BatchSerializers
 
-# create your view here
-class BatchListView(generics.GenericAPIView):
+
+
+class BatchListCreateView(generics.GenericAPIView):
     queryset = Batch.objects.all()
     serializer_class = BatchSerializers
     permission_classes = [permissions.IsAdminUser]
-    
+
     @swagger_auto_schema(
-        operation_summary= 'this is just for the admins or staff',
-        operation_description= 'allows the admins to see all batches',
-        request_body= BatchSerializers,
+        operation_summary="List all batches (Admin only)"   ,
+        operation_description="Allows admins to view all batches with optional filters for 'status' and 'name'.",
         responses={200: BatchSerializers(many=True)},
     )
-
     def get(self, request):
         status_filter = request.GET.get('status')
         name = request.GET.get('name')
         today = date.today()
-        batchlist = Batch.objects.all()
-         
-         #to filter batches by status if its active or not 
+        batches = Batch.objects.all()
+
         if status_filter == "active":
-            batchlist = batchlist.filter(start_date__lte=today, end_date__gte=today)
+            batches = batches.filter(start_date__lte=today, end_date__gte=today)
         elif status_filter == "upcoming":
-            batchlist = batchlist.filter(start_date__gt=today)
+            batches = batches.filter(start_date__gt=today)
 
         if name:
-            batchlist = batchlist.filter(batch_name__icontains=name)
+            batches = batches.filter(batch_name__icontains=name)
 
-        serializer = BatchSerializers(batchlist, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-    
-    @swagger_auto_schema(
-        operation_summary='create a new batch using post request',
-        operation_description= 'allows the admin to create a new batch',
-        request_body= BatchSerializers,
-        responses={201: BatchSerializers()}
-    )
-
-    def post(self, request):
-        serializer = self.get_serializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save(user=request.user)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-
-    
-class  BatchDetailView(generics.GenericAPIView):
-    queryset = Batch.objects.all()
-    serializer_class = BatchSerializers
-    permission_classes = [permissions.IsAdminUser]
-    lookup_field = 'id'
-
-    @swagger_auto_schema(
-        operation_summary= 'allows the admin to view the detail of batches available',
-        operation_description= 'only the admin can get a single detail of a particular batch',
-        request_body= BatchSerializers,
-        responses={200: BatchSerializers()}
-    )
-
-    def get(self, request, *args, **kwargs ):
-        return self.retrieve(request, *args, **kwargs)
-    
-    @swagger_auto_schema(
-        operation_summary='update all the fiels of a batch',
-        operation_description='allows the admin to update a batch fully',
-        request_body=BatchSerializers,
-        responses={200: BatchSerializers()}
-    )
-
-    def put(self, request, *args, **kwargs):
-        return self.update(request, *args, **kwargs)
-    
-    @swagger_auto_schema(
-        operation_summary='partially update a batch',
-        operation_description='only admin have the access to partially a some fields in the batch',
-        request_body= BatchSerializers,
-        responses={200: BatchSerializers()}
-    )
-
-    def patch(self, request, *args, **kwargs):
-        return self.partial_update(request, *args, **kwargs)
-    
-    @swagger_auto_schema(
-        operation_summary='for the admin to delete a batch fully',
-        operation_description= 'allows the admin delete a batch by its id',
-        request_body= BatchSerializers,
-        responses={204: 'batch deleted sucessfully'}
-    )
-
-    def delete(self, request, *args, **kwargs):
-        return self.destroy(request, *args, **kwargs)
-
-
-=======
-from rest_framework import status
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.views import APIView
-from drf_yasg.utils import swagger_auto_schema
-
-from .models import Batch
-from .serializers import BatchSerializers
-
-
-class BatchListCreateView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    @swagger_auto_schema(
-        operation_summary="List all batches",
-        operation_description="Retrieve all available batches created by any user.",
-        responses={200: BatchSerializers(many=True)},
-    )
-    def get(self, request):
-        batches = Batch.objects.all().order_by('-created_at')
         serializer = BatchSerializers(batches, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @swagger_auto_schema(
-        operation_summary="Create a new batch",
-        operation_description="Create a new batch and assign the authenticated user as the creator.",
+        operation_summary="Create a new batch (Admin only)",
+        operation_description="Allows an admin to create a batch. The 'created_by' field is set automatically.",
         request_body=BatchSerializers,
         responses={201: BatchSerializers()},
     )
     def post(self, request):
-        serializer = BatchSerializers(data=request.data)
+        serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
-            serializer.save(created_by=request.user)
+            serializer.save(created_by=request.user)  # ✅ fixed key here
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class BatchDetailView(APIView):
-    permission_classes = [IsAuthenticated]
+class BatchDetailView(generics.GenericAPIView):
+    queryset = Batch.objects.all()
+    serializer_class = BatchSerializers
+    permission_classes = [permissions.IsAuthenticated]
+    lookup_field = 'pk'
 
     def get_object(self, pk):
         try:
@@ -150,7 +62,7 @@ class BatchDetailView(APIView):
 
     @swagger_auto_schema(
         operation_summary="Retrieve a batch by ID",
-        operation_description="Get detailed information about a specific batch using its ID.",
+        operation_description="Authenticated users can view batch details by ID.",
         responses={200: BatchSerializers()},
     )
     def get(self, request, pk):
@@ -162,7 +74,7 @@ class BatchDetailView(APIView):
 
     @swagger_auto_schema(
         operation_summary="Update a batch by ID",
-        operation_description="Update batch details (only the creator can update their batch).",
+        operation_description="Only the creator (admin who created it) can update this batch.",
         request_body=BatchSerializers,
         responses={200: BatchSerializers()},
     )
@@ -174,7 +86,27 @@ class BatchDetailView(APIView):
         if batch.created_by != request.user:
             return Response({"detail": "You are not allowed to edit this batch."}, status=status.HTTP_403_FORBIDDEN)
 
-        serializer = BatchSerializers(batch, data=request.data, partial=False)
+        serializer = self.get_serializer(batch, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @swagger_auto_schema(
+        operation_summary="Partially update a batch by ID",
+        operation_description="Allows the creator to partially update batch details.",
+        request_body=BatchSerializers,
+        responses={200: BatchSerializers()},
+    )
+    def patch(self, request, pk):
+        batch = self.get_object(pk)
+        if not batch:
+            return Response({"detail": "Batch not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        if batch.created_by != request.user:
+            return Response({"detail": "You are not allowed to edit this batch."}, status=status.HTTP_403_FORBIDDEN)
+
+        serializer = self.get_serializer(batch, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
@@ -182,8 +114,8 @@ class BatchDetailView(APIView):
 
     @swagger_auto_schema(
         operation_summary="Delete a batch by ID",
-        operation_description="Delete a batch (only the creator can delete it).",
-        responses={204: "No content"},
+        operation_description="Allows only the creator to delete a batch.",
+        responses={204: "Batch deleted successfully"},
     )
     def delete(self, request, pk):
         batch = self.get_object(pk)
@@ -195,4 +127,3 @@ class BatchDetailView(APIView):
 
         batch.delete()
         return Response({"detail": "Batch deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
->>>>>>> 3199560250fba6a3383b770fa9f2a4427c11b809

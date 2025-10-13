@@ -1,6 +1,8 @@
 import uuid
 from django.db import models
 from django.conf import settings
+from django.utils import timezone
+from django.utils.text import slugify
 from apps.base.models import BaseModel
 from apps.batch.models import Batch
 
@@ -17,13 +19,28 @@ STATUS_CHOICES = [
     ("SUSPENDED", "Suspended"),
 ]
 
-COURSE_CHOICES = [
-    ("Backend Development", "Backend Development"),
-    ("Frontend Development", "Frontend Development"),
-    ("Machine Learning", "Machine Learning"),
-    ("Data Analysis", "Data Analysis"),
-    ("Cyber Security", "Cyber Security"),
-]
+
+class Course(BaseModel):
+    name = models.CharField(max_length=100, unique=True)
+    slug = models.SlugField(max_length=255, unique=True, blank=True, null=True)
+    description = models.TextField(blank=True, null=True)
+    duration_in_months = models.PositiveIntegerField(default=4)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Course"
+        verbose_name_plural = "Courses"
+        ordering = ["name"]
+
+    def __str__(self):
+        return self.name
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
 
 
 class StudentProfile(BaseModel):
@@ -40,8 +57,8 @@ class StudentProfile(BaseModel):
     city = models.CharField(max_length=100, null=True, blank=True)
     state = models.CharField(max_length=100, null=True, blank=True)
     profile_picture = models.ImageField(upload_to="student_profiles/", null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)  
-    updated_at = models.DateTimeField(auto_now=True)      
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         ordering = ["user__first_name"]
@@ -66,8 +83,8 @@ class StudentBatchEnrollment(BaseModel):
         on_delete=models.CASCADE,
         related_name="enrollments"
     )
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="enrollments")
     enrollment_date = models.DateField(auto_now_add=True)
-    course = models.CharField(max_length=100, choices=COURSE_CHOICES)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="ACTIVE")
     total_fee = models.DecimalField(max_digits=10, decimal_places=2)
     discount_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
@@ -77,7 +94,7 @@ class StudentBatchEnrollment(BaseModel):
         ordering = ["-enrollment_date"]
 
     def __str__(self):
-        return f"{self.student.get_full_name()} - {self.batch.batch_name} ({self.status})"
+        return f"{self.student.get_full_name()} - {self.course.name} ({self.status})"
 
     def save(self, *args, **kwargs):
         self.final_fee = self.total_fee - self.discount_amount

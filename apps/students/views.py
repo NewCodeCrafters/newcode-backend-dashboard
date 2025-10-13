@@ -1,276 +1,134 @@
-from django.shortcuts import render
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from drf_yasg.utils import swagger_auto_schema
-from .models import StudentBatchEnrollment, StudentProfile
-from .serializers import StudentBatchEnrollmentSerializer,StudentProfileSerializer,StudentProfileWithEnrollmentsSerializer
+from .models import Course, StudentProfile, StudentBatchEnrollment
+from .serializers import (
+    CourseSerializer,
+    StudentProfileSerializer,
+    StudentBatchEnrollmentSerializer,
+)
 
-#STUDENT PROFILE 
-class StudentProfileView(generics.RetrieveUpdateDestroyAPIView):
+
+# ========== COURSE VIEWS ==========
+class CourseListCreateView(generics.ListCreateAPIView):
+    queryset = Course.objects.all().order_by("name")
+    serializer_class = CourseSerializer
+    permission_classes = [permissions.IsAdminUser]
+
+    @swagger_auto_schema(
+        operation_summary="List all courses",
+        operation_description="Retrieve all available courses.",
+        responses={200: CourseSerializer(many=True)},
+    )
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+
+    @swagger_auto_schema(
+        operation_summary="Create a new course",
+        operation_description="Admin can create a new course.",
+        request_body=CourseSerializer,
+        responses={201: CourseSerializer()},
+    )
+    def post(self, request, *args, **kwargs):
+        return super().post(request, *args, **kwargs)
+
+
+class CourseDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Course.objects.all()
+    serializer_class = CourseSerializer
+    permission_classes = [permissions.IsAdminUser]
+    lookup_field = "pk"
+
+    @swagger_auto_schema(operation_summary="Retrieve a course by ID")
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+
+    @swagger_auto_schema(operation_summary="Update a course by ID")
+    def put(self, request, *args, **kwargs):
+        return super().put(request, *args, **kwargs)
+
+    @swagger_auto_schema(operation_summary="Partially update a course by ID")
+    def patch(self, request, *args, **kwargs):
+        return super().patch(request, *args, **kwargs)
+
+    @swagger_auto_schema(operation_summary="Delete a course by ID")
+    def delete(self, request, *args, **kwargs):
+        return super().delete(request, *args, **kwargs)
+
+
+# ========== STUDENT PROFILE ==========
+class StudentProfileListCreateView(generics.ListCreateAPIView):
     queryset = StudentProfile.objects.all()
     serializer_class = StudentProfileSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-    def get_object(self):
-        return StudentProfile.objects.get(user=self.request.user)
-
     @swagger_auto_schema(
-        operation_summary="Retrieve the logged-in student's profile",
-        operation_description="Returns the profile details of the authenticated student along with their enrollments.",
-        responses={200: StudentProfileWithEnrollmentsSerializer()},
+        operation_summary="List all student profiles",
+        responses={200: StudentProfileSerializer(many=True)},
     )
-    def get(self, request):
-        profile = self.get_object()
-        serializer = StudentProfileWithEnrollmentsSerializer(profile)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
 
     @swagger_auto_schema(
-        operation_summary="Create a new student profile",
-        operation_description="Authenticated users can create their student profile.",
+        operation_summary="Create a student profile for logged-in user",
         request_body=StudentProfileSerializer,
         responses={201: StudentProfileSerializer()},
     )
-    def post(self, request):
+    def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
             serializer.save(user=request.user)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    @swagger_auto_schema(
-        operation_summary="Update the student's profile",
-        operation_description="Allows the student to update their profile fields.",
-        request_body=StudentProfileSerializer,
-        responses={200: StudentProfileSerializer()},
-    )
-    def put(self, request):
-        profile = self.get_object()
-        serializer = self.get_serializer(profile, data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @swagger_auto_schema(
-        operation_summary="Partially update the student's profile",
-        operation_description="Allows partial updates to profile fields.",
-        request_body=StudentProfileSerializer,
-        responses={200: StudentProfileSerializer()},
-    )
-    def patch(self, request):
-        profile = self.get_object()
-        serializer = self.get_serializer(profile, data=request.data, partial=True)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_200_OK)
+class StudentProfileDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = StudentProfile.objects.all()
+    serializer_class = StudentProfileSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    lookup_field = "pk"
+
+    @swagger_auto_schema(operation_summary="Retrieve a student profile by ID")
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
 
 
-class StudentBatchEnrollmentView(generics.GenericAPIView):
+# ========== STUDENT ENROLLMENT ==========
+class EnrollmentListCreateView(generics.ListCreateAPIView):
+    queryset = StudentBatchEnrollment.objects.all()
     serializer_class = StudentBatchEnrollmentSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-    def get_queryset(self):
-        return StudentBatchEnrollment.objects.filter(student__user=self.request.user)
-
     @swagger_auto_schema(
-        operation_summary="List all batch enrollments for the logged-in student",
-        operation_description="Displays all batches that the authenticated student is enrolled in.",
+        operation_summary="List all enrollments",
         responses={200: StudentBatchEnrollmentSerializer(many=True)},
     )
-    def get(self, request):
-        enrollments = self.get_queryset()
-        serializer = self.get_serializer(enrollments, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+    def get(self, request, *args, **kwargs):
+        if not request.user.is_staff:
+            queryset = self.get_queryset().filter(student=request.user)
+            serializer = self.get_serializer(queryset, many=True)
+            return Response(serializer.data)
+        return super().get(request, *args, **kwargs)
 
     @swagger_auto_schema(
-        operation_summary="Enroll a student in a batch",
-        operation_description="Allows a student to enroll in a specific batch by providing batch Id and profile id.",
+        operation_summary="Enroll student into a batch & course",
         request_body=StudentBatchEnrollmentSerializer,
         responses={201: StudentBatchEnrollmentSerializer()},
     )
-    def post(self, request):
-        student_profile = StudentProfile.objects.get(user=request.user)
-
+    def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save(student=student_profile)  
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        if serializer.is_valid():
+            serializer.save(student=request.user)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-
-# ADMIN VIEW 
-class AdminStudentProfileView(generics.GenericAPIView):
-    queryset = StudentProfile.objects.all()
-    serializer_class = StudentProfileWithEnrollmentsSerializer
-    permission_classes = [permissions.IsAdminUser]
-
-    @swagger_auto_schema(
-        operation_summary="List all student profiles",
-        operation_description="Returns all student profiles with enrollment details.",
-        responses={200: StudentProfileWithEnrollmentsSerializer(many=True)},
-    )
-    def get(self, request):
-        profiles = self.get_queryset()
-        serializer = self.get_serializer(profiles, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-    @swagger_auto_schema(
-        operation_summary="Create a student profile ",
-        operation_description="Allows admins to create a student profile for a specific user.",
-        request_body=StudentProfileSerializer,
-        responses={201: StudentProfileSerializer()},
-    )
-    def post(self, request):
-        serializer = StudentProfileSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-
-#  Admin enrollment view for admin onlyyyyyyy
-class AdminStudentBatchEnrollmentView(generics.GenericAPIView):
+class EnrollmentDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = StudentBatchEnrollment.objects.all()
     serializer_class = StudentBatchEnrollmentSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [permissions.IsAuthenticated]
+    lookup_field = "pk"
 
-    @swagger_auto_schema(
-        operation_summary="List all student batch enrollments admin only",
-        operation_description="Admin can view all student-to-batch enrollments in the system.",
-        responses={200: StudentBatchEnrollmentSerializer(many=True)},
-    )
-    def get(self, request):
-        enrollments = self.get_queryset()
-        serializer = self.get_serializer(enrollments, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-    @swagger_auto_schema(
-        operation_summary="Manually enroll a student in a batch admni only",
-        operation_description="Admin can enroll any student into a batch by providing student_profile_id and batch_id.",
-        request_body=StudentBatchEnrollmentSerializer,
-        responses={201: StudentBatchEnrollmentSerializer()},
-    )
-    def post(self, request):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-
-# ADMIN DETAIL VIEW — Single student profile by ID
-# class AdminStudentProfileDetailView(generics.GenericAPIView):
-#     queryset = StudentProfile.objects.all()
-#     serializer_class = StudentProfileWithEnrollmentsSerializer
-#     permission_classes = [permissions.IsAdminUser]
-
-#     def get_object(self, pk):
-#         try:
-#             return StudentProfile.objects.get(pk=pk)
-#         except StudentProfile.DoesNotExist:
-#             return None
-
-#     @swagger_auto_schema(
-#         operation_summary="Retrieve a specific student profile (Admin only)",
-#         operation_description="View detailed info of a student profile by ID.",
-#         responses={200: StudentProfileWithEnrollmentsSerializer()},
-#     )
-#     def get(self, request, pk):
-#         profile = self.get_object(pk)
-#         if not profile:
-#             return Response({"error": "Profile not found"}, status=status.HTTP_404_NOT_FOUND)
-#         serializer = self.get_serializer(profile)
-#         return Response(serializer.data, status=status.HTTP_200_OK)
-
-#     @swagger_auto_schema(
-#         operation_summary="Update a specific student profile (Admin only)",
-#         operation_description="Allows full updates to a specific student profile by ID.",
-#         request_body=StudentProfileSerializer,
-#         responses={200: StudentProfileSerializer()},
-#     )
-#     def put(self, request, pk):
-#         profile = self.get_object(pk)
-#         if not profile:
-#             return Response({"error": "Profile not found"}, status=status.HTTP_404_NOT_FOUND)
-#         serializer = StudentProfileSerializer(profile, data=request.data)
-#         serializer.is_valid(raise_exception=True)
-#         serializer.save()
-#         return Response(serializer.data, status=status.HTTP_200_OK)
-
-#     @swagger_auto_schema(
-#         operation_summary="Partially update a student profile (Admin only)",
-#         operation_description="Allows partial updates to a specific student profile.",
-#         request_body=StudentProfileSerializer,
-#         responses={200: StudentProfileSerializer()},
-#     )
-#     def patch(self, request, pk):
-#         profile = self.get_object(pk)
-#         if not profile:
-#             return Response({"error": "Profile not found"}, status=status.HTTP_404_NOT_FOUND)
-#         serializer = StudentProfileSerializer(profile, data=request.data, partial=True)
-#         serializer.is_valid(raise_exception=True)
-#         serializer.save()
-#         return Response(serializer.data, status=status.HTTP_200_OK)
-
-#     @swagger_auto_schema(
-#         operation_summary="Delete a student profile (Admin only)",
-#         operation_description="Allows admins to permanently delete a student profile by ID.",
-#         responses={204: "Profile deleted successfully"},
-#     )
-#     def delete(self, request, pk):
-#         profile = self.get_object(pk)
-#         if not profile:
-#             return Response({"error": "Profile not found"}, status=status.HTTP_404_NOT_FOUND)
-#         profile.delete()
-#         return Response({"message": "Profile deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
-
-
-from rest_framework import status
-from rest_framework.response import Response
-from rest_framework.views import APIView
-from drf_yasg.utils import swagger_auto_schema
-from drf_yasg import openapi
-
-from .models import StudentProfile
-from .serializers import StudentProfileSerializer
-
-
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from drf_yasg.utils import swagger_auto_schema
-from drf_yasg import openapi
-from apps.students.models import StudentProfile
-from apps.students.serializers import StudentProfileSerializer
-
-
-class GetStudentByUUIDView(APIView):
-    """
-    Retrieve a student's profile using their UUID-based student_id (e.g. STD-5C3DF1)
-    """
-
-    @swagger_auto_schema(
-        manual_parameters=[
-            openapi.Parameter(
-                "student_id",
-                openapi.IN_PATH,
-                description="UUID-based student ID (e.g., STD-5C3DF1)",
-                type=openapi.TYPE_STRING,
-                required=True,
-            )
-        ],
-        responses={
-            200: openapi.Response("Student profile retrieved successfully", StudentProfileSerializer),
-            404: "Student not found",
-        },
-    )
-    def get(self, request, student_id):
-        try:
-            student = StudentProfile.objects.get(student_id=student_id)
-            serializer = StudentProfileSerializer(student)
-            return Response(
-                {"message": "Student profile retrieved successfully", "data": serializer.data},
-                status=status.HTTP_200_OK
-            )
-        except StudentProfile.DoesNotExist:
-            return Response(
-                {"error": f"Student with ID '{student_id}' not found"},
-                status=status.HTTP_404_NOT_FOUND
-            )
+    @swagger_auto_schema(operation_summary="Retrieve enrollment by ID")
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)

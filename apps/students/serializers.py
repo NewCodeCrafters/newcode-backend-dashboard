@@ -1,10 +1,14 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from .models import StudentProfile, StudentBatchEnrollment
+from .models import StudentProfile, StudentEnrollment, Course
 from apps.batch.models import Batch
+from django.utils import timezone
+from dateutil.relativedelta import relativedelta
 
 User = get_user_model()
 
+
+# STUDENT PROFILE
 
 class StudentProfileSerializer(serializers.ModelSerializer):
     user = serializers.StringRelatedField(read_only=True)
@@ -31,10 +35,22 @@ class StudentProfileSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
         read_only_fields = ["student_id", "created_at", "updated_at"]
-        depth = 1 
+        depth = 1
 
 
-class StudentBatchEnrollmentSerializer(serializers.ModelSerializer):
+
+# COURSE
+
+class CourseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Course
+        fields = ["id", "name", "slug", "description"]
+
+
+
+# STUDENT ENROLLMENT (Unified)
+
+class StudentEnrollmentSerializer(serializers.ModelSerializer):
     student = serializers.StringRelatedField(read_only=True)
     student_id = serializers.PrimaryKeyRelatedField(
         queryset=User.objects.all(),
@@ -42,32 +58,81 @@ class StudentBatchEnrollmentSerializer(serializers.ModelSerializer):
         write_only=True
     )
 
+    course = CourseSerializer(read_only=True)
+    course_id = serializers.PrimaryKeyRelatedField(
+        queryset=Course.objects.all(),
+        source="course",
+        write_only=True
+    )
+
     batch = serializers.StringRelatedField(read_only=True)
     batch_id = serializers.PrimaryKeyRelatedField(
         queryset=Batch.objects.all(),
         source="batch",
+        required=False,
+        allow_null=True,
         write_only=True
     )
 
     class Meta:
-        model = StudentBatchEnrollment
+        model = StudentEnrollment
         fields = [
             "id",
             "student", "student_id",
+            "course", "course_id",
             "batch", "batch_id",
             "enrollment_date",
-            "course",
             "status",
             "total_fee",
             "discount_amount",
             "final_fee",
-
         ]
-        read_only_fields = ["enrollment_date",  "final_fee"]
+        read_only_fields = ["final_fee", "enrollment_date"]
 
+
+class StudentEnrollmentProgressSerializer(StudentEnrollmentSerializer):
+    days_remaining = serializers.SerializerMethodField()
+    months_remaining = serializers.SerializerMethodField()
+    progress_message = serializers.SerializerMethodField()
+
+    class Meta(StudentEnrollmentSerializer.Meta):
+        fields = StudentEnrollmentSerializer.Meta.fields + [
+            "days_remaining",
+            "months_remaining",
+            "progress_message",
+            "is_completed",
+        ]
+
+    def get_days_remaining(self, obj):
+        if obj.completion_date:
+            today = timezone.localdate()
+            remaining_days = (obj.completion_date - today).days
+            return max(remaining_days, 0)
+        return None
+
+    def get_months_remaining(self, obj):
+        if obj.completion_date:
+            today = timezone.localdate()
+            delta = relativedelta(obj.completion_date, today)
+            months = delta.years * 12 + delta.months
+            return max(months, 0)
+        return None
+
+    def get_progress_message(self, obj):
+        if obj.is_completed:
+            return "This course/batch has been completed."
+        days = self.get_days_remaining(obj)
+        if days == 0:
+            return "Your batch is ending this week!"
+        elif days <= 30:
+            return "You have less than a month left."
+        else:
+            return f"{self.get_months_remaining(obj)} months remaining until completion."
+
+# PROFILE WITH ENROLLMENTS
 
 class StudentProfileWithEnrollmentsSerializer(StudentProfileSerializer):
-    enrollments = StudentBatchEnrollmentSerializer(
+    enrollments = StudentEnrollmentSerializer(
         many=True,
         read_only=True,
         source="user.enrollments"

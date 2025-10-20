@@ -1,16 +1,18 @@
 from django.urls import path
-<<<<<<< HEAD
-from .views import StudentProfileView, AdminStudentProfileView, StudentBatchEnrollmentView
-=======
-from .views import StudentProfileView, AdminStudentProfileView, GetStudentByUUIDView
->>>>>>> 3199560250fba6a3383b770fa9f2a4427c11b809
+from .views import (
+    StudentProfileView,
+    StudentCourseEnrollmentView,
+    StudentBatchProgressView,
+    AdminEnrollmentListView,
+    AdminAssignBatchView,
+    GetStudentByUUIDView,
+)
 
 urlpatterns = [
     path("student/profile/", StudentProfileView.as_view(), name="student-profile"),
-    path("admin/profiles/", AdminStudentProfileView.as_view(), name="admin-profile-list"),
-<<<<<<< HEAD
-    path('student/enrollment/', StudentBatchEnrollmentView.as_view(), name='student-batch-enrollment')
-=======
-     path("student/<str:student_id>/", GetStudentByUUIDView.as_view(), name="get_student_by_uuid"),
->>>>>>> 3199560250fba6a3383b770fa9f2a4427c11b809
+    path("student/enrollments/", StudentCourseEnrollmentView.as_view(), name="student-enrollments"),
+    path("student/batch-progress/", StudentBatchProgressView.as_view(), name="student-batch-progress"),
+    path("student/<uuid:student_id>/", GetStudentByUUIDView.as_view(), name="get-student-uuid"),
+    path("admin/enrollments/", AdminEnrollmentListView.as_view(), name="admin-enrollment-list"),
+    path("admin/assign-batch/", AdminAssignBatchView.as_view(), name="admin-assign-batch"),
 ]

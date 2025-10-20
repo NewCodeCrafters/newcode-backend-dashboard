@@ -1,13 +1,13 @@
 from django.db import models
 from django.conf import settings
-from apps.students.models import StudentBatchEnrollment
+from apps.students.models import StudentEnrollment
 from apps.base.models import BaseModel
 
 
 
 
 class PaymentPlan(BaseModel):
-    enrollment = models.ForeignKey(StudentBatchEnrollment, on_delete=models.CASCADE, related_name="payment_plans")
+    enrollment = models.ForeignKey(StudentEnrollment, on_delete=models.CASCADE, related_name="payment_plans")
     plan_name = models.CharField(max_length=100)
     total_amount = models.DecimalField(max_digits=10, decimal_places=2)
     number_of_installments = models.PositiveIntegerField()
@@ -25,14 +25,14 @@ class PaymentPlan(BaseModel):
 from django.db import models
 from django.utils import timezone
 from apps.students.models import StudentProfile as Student
-from apps.students.models import StudentBatchEnrollment
+from apps.students.models import StudentEnrollment
 from apps.installment.models import Installment  # adjust import if your admin user model is elsewhere
 
 
 from django.db import models
 from django.utils import timezone
 from apps.students.models import StudentProfile as Student
-from apps.students.models import StudentBatchEnrollment
+from apps.students.models import StudentEnrollment
 from apps.installment.models import Installment
 
 
@@ -54,7 +54,7 @@ class PaymentTransaction(models.Model):
     ]
 
     enrollment = models.ForeignKey(
-        StudentBatchEnrollment,
+        StudentEnrollment,
         on_delete=models.CASCADE,
         related_name='payment_transactions'
     )

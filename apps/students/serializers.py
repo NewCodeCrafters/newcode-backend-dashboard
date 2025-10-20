@@ -4,7 +4,7 @@ from django.contrib.auth import get_user_model
 from .models import StudentProfile, StudentEnrollment, Course
 from apps.batch.models import Batch
 from django.utils import timezone
-from .models import Course, StudentProfile, StudentBatchEnrollment
+from .models import Course, StudentProfile, StudentEnrollment
 
 
 

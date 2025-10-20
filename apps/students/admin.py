@@ -1,6 +1,6 @@
 from django.contrib import admin
 from .models import Course, StudentProfile, StudentEnrollment
-from .models import Course, StudentProfile, StudentBatchEnrollment
+from .models import Course, StudentProfile, StudentEnrollment
 
 
 @admin.register(Course)

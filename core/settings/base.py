@@ -36,7 +36,6 @@ CUSTOM_APPS = [
     'apps.students',
     'apps.batch',
     "apps.payments",
-    "apps.installment",
     'apps.notifications',
 
 ]
@@ -46,6 +45,7 @@ THIRD_PARTY_APPS = [
     "rest_framework.authtoken",
     "rest_framework_simplejwt",
     "drf_spectacular",
+    'drf_yasg',
 ]
 
 INSTALLED_APPS = DJANGO_APPS + CUSTOM_APPS + THIRD_PARTY_APPS

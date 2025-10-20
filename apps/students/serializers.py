@@ -1,25 +1,32 @@
 from rest_framework import serializers
+<<<<<<< HEAD
 from django.contrib.auth import get_user_model
 from .models import StudentProfile, StudentEnrollment, Course
 from apps.batch.models import Batch
 from django.utils import timezone
 from dateutil.relativedelta import relativedelta
+=======
+from .models import Course, StudentProfile, StudentBatchEnrollment
+>>>>>>> 45cefa61fb59a6731fb023d3bc59d8ecb9293547
 
-User = get_user_model()
+
+class CourseSerializer(serializers.ModelSerializer):
+    slug = serializers.SlugField(read_only=True)
+
+    class Meta:
+        model = Course
+        fields = "__all__"
+        read_only_fields = ("slug", "created_at", "updated_at")
 
 
 # STUDENT PROFILE
 
 class StudentProfileSerializer(serializers.ModelSerializer):
     user = serializers.StringRelatedField(read_only=True)
-    user_id = serializers.PrimaryKeyRelatedField(
-        queryset=User.objects.all(),
-        source="user",
-        write_only=True
-    )
 
     class Meta:
         model = StudentProfile
+<<<<<<< HEAD
         fields = [
             "id",
             "user", "user_id",
@@ -36,6 +43,10 @@ class StudentProfileSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ["student_id", "created_at", "updated_at"]
         depth = 1
+=======
+        fields = "__all__"
+        read_only_fields = ("student_id", "created_at", "updated_at", "user")
+>>>>>>> 45cefa61fb59a6731fb023d3bc59d8ecb9293547
 
 
 
@@ -52,6 +63,7 @@ class CourseSerializer(serializers.ModelSerializer):
 
 class StudentEnrollmentSerializer(serializers.ModelSerializer):
     student = serializers.StringRelatedField(read_only=True)
+<<<<<<< HEAD
     student_id = serializers.PrimaryKeyRelatedField(
         queryset=User.objects.all(),
         source="student",
@@ -140,3 +152,11 @@ class StudentProfileWithEnrollmentsSerializer(StudentProfileSerializer):
 
     class Meta(StudentProfileSerializer.Meta):
         fields = StudentProfileSerializer.Meta.fields + ["enrollments"]
+=======
+    final_fee = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
+
+    class Meta:
+        model = StudentBatchEnrollment
+        fields = "__all__"
+        read_only_fields = ("final_fee", "enrollment_date", "student")
+>>>>>>> 45cefa61fb59a6731fb023d3bc59d8ecb9293547

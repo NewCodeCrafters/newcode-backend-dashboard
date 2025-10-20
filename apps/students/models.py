@@ -1,6 +1,8 @@
 import uuid
 from django.db import models
 from django.conf import settings
+from django.utils import timezone
+from django.utils.text import slugify
 from apps.base.models import BaseModel
 from apps.batch.models import Batch
 from datetime import timedelta
@@ -20,6 +22,32 @@ STATUS_CHOICES = [
     ("SUSPENDED", "Suspended"),
 ]
 
+<<<<<<< HEAD
+=======
+
+class Course(BaseModel):
+    name = models.CharField(max_length=100, unique=True)
+    slug = models.SlugField(max_length=255, unique=True, blank=True, null=True)
+    description = models.TextField(blank=True, null=True)
+    duration_in_months = models.PositiveIntegerField(default=4)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Course"
+        verbose_name_plural = "Courses"
+        ordering = ["name"]
+
+    def __str__(self):
+        return self.name
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
+
+>>>>>>> 45cefa61fb59a6731fb023d3bc59d8ecb9293547
 
 class StudentProfile(BaseModel):
     user = models.OneToOneField(
@@ -71,6 +99,7 @@ class StudentEnrollment(BaseModel):
         on_delete=models.CASCADE,
         related_name="enrollments"
     )
+<<<<<<< HEAD
     batch = models.ForeignKey(
         Batch,
         on_delete=models.SET_NULL,
@@ -80,6 +109,11 @@ class StudentEnrollment(BaseModel):
     )
     enrollment_date = models.DateField(auto_now_add=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="PENDING")
+=======
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="enrollments")
+    enrollment_date = models.DateField(auto_now_add=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="ACTIVE")
+>>>>>>> 45cefa61fb59a6731fb023d3bc59d8ecb9293547
     total_fee = models.DecimalField(max_digits=10, decimal_places=2)
     discount_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     final_fee = models.DecimalField(max_digits=10, decimal_places=2, editable=False)
@@ -94,6 +128,10 @@ class StudentEnrollment(BaseModel):
 
     def __str__(self):
         return f"{self.student.get_full_name()} - {self.course.name} ({self.status})"
+<<<<<<< HEAD
+=======
+
+>>>>>>> 45cefa61fb59a6731fb023d3bc59d8ecb9293547
     def save(self, *args, **kwargs):
             # Auto-calculate final fee
         self.final_fee = self.total_fee - self.discount_amount

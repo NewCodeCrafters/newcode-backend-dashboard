@@ -8,20 +8,20 @@ from decouple import config
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-# DATABASES = {
-#     "default": {
-#         "ENGINE": "django.db.backends.postgresql",
-#         "NAME": config("SQL_DATABASE"),
-#         "USER": config("SQL_USER"),
-#         "PASSWORD": config("SQL_PASSWORD"),
-#         "HOST": config("SQL_HOST", "localhost"),
-#         "PORT": config("SQL_PORT", "5432"),
-#         # "OPTIONS": {
-#         #     "sslmode": "require",
-#         #     "sslrootcert": "global-bundle.pem",  # Path to your RDS CA certificate
-#         # },
-#     }
-# }
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": config("SQL_DATABASE"),
+        "USER": config("SQL_USER"),
+        "PASSWORD": config("SQL_PASSWORD"),
+        "HOST": config("SQL_HOST", "localhost"),
+        "PORT": config("SQL_PORT", "5432"),
+        # "OPTIONS": {
+        #     "sslmode": "require",
+        #     "sslrootcert": "global-bundle.pem",  # Path to your RDS CA certificate
+        # },
+    }
+}
 
 DATABASES = {
     'default': {

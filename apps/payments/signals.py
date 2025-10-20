@@ -8,15 +8,18 @@ from .models import PaymentPlan
 @receiver(post_save, sender=PaymentPlan)
 def notify_on_payment_plan_creation(sender, instance, created, **kwargs):
     if created:
-        student = instance.enrollment.student
-        subject = f"New Payment Plan Created for {student.get_full_name()}"
+        student = instance.student
+        full_name = student.get_full_name()  # ✅ Combines first + last name
+
+        subject = f"New Payment Plan Created for {full_name}"
         message = (
-            f"Dear {student.get_full_name()},\n\n"
-            f"A new payment plan '{instance.plan_name}' has been created for your course enrollment.\n"
+            f"Dear {full_name},\n\n"
+            f"A new payment plan has been created for your account.\n"
             f"Total Amount: ₦{instance.total_amount}\n"
-            f"Installments: {instance.number_of_installments}\n\n"
-            f"Created By: {instance.created_by.get_full_name()}\n"
-            f"Date: {instance.created_at.strftime('%Y-%m-%d')}\n\n"
+            f"Installments: {instance.number_of_installments}\n"
+            f"Frequency: {instance.frequency}\n"
+            f"Start Date: {instance.start_date.strftime('%Y-%m-%d')}\n\n"
+            f"Please log in to your student portal to view the details of your payment schedule.\n\n"
             f"Best regards,\n"
             f"The Academy Team"
         )

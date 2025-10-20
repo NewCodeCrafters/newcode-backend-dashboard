@@ -5,9 +5,6 @@ from apps.batch.models import Batch
 from apps.payments.models import PaymentPlan
 
 
-# ==========================
-# NOTIFICATION TYPE CHOICES
-# ==========================
 NOTIFICATION_TYPE_CHOICES = [
     ("NEW_SIGNUP", "New Signup"),
     ("PAYMENT_RECEIVED", "Payment Received"),
@@ -70,9 +67,6 @@ class AdminNotification(models.Model):
         return f"{self.notification_type} - {self.title}"
 
 
-# ==========================
-# USER NOTIFICATIONS MODEL
-# ==========================
 class Notification(models.Model):
     recipient = models.ForeignKey(
         User,
@@ -115,9 +109,6 @@ class Notification(models.Model):
         return f"{self.title} → {self.recipient.get_full_name()}"
 
 
-# ==========================
-# EMAIL QUEUE MODEL
-# ==========================
 class EmailQueue(models.Model):
     EMAIL_TYPE_CHOICES = [
         ("VERIFICATION", "Verification"),

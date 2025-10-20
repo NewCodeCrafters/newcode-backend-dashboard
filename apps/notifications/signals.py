@@ -8,7 +8,7 @@ from apps.batch.models import Batch
 from .models import Notification
 
 
-# ✅ 1. Notify all staff when a new user signs up
+
 @receiver(post_save, sender=User)
 def create_signup_notification(sender, instance, created, **kwargs):
     if created:
@@ -36,7 +36,7 @@ def create_signup_notification(sender, instance, created, **kwargs):
             )
 
 
-# ✅ 2. Notify all staff when a payment plan is created
+
 @receiver(post_save, sender=PaymentPlan)
 def payment_notification(sender, instance, created, **kwargs):
     if created:
@@ -68,7 +68,6 @@ def payment_notification(sender, instance, created, **kwargs):
 @receiver(post_save, sender=Batch)
 def batch_created_notification(sender, instance, created, **kwargs):
     if created:
-        # ✅ Notify staff members
         staff_members = User.objects.filter(is_staff=True).exclude(email__isnull=True)
 
         subject_staff = "New Batch Created"
@@ -87,11 +86,11 @@ def batch_created_notification(sender, instance, created, **kwargs):
                 related_batch=instance,
             )
 
-        # ✅ Notify all students (non-staff)
+        # ✅ Notify all students (non-staff users)
         student_users = User.objects.filter(is_staff=False).exclude(email__isnull=True)
 
         subject_students = "New Batch Available!"
-        message_students = f"A new batch '{instance.batch_name}' for {instance.course.name} is now open for enrollment."
+        message_students = f"A new batch '{instance.batch_name}' is now open for enrollment."
 
         recipient_list_students = [student.email for student in student_users if student.email]
         if recipient_list_students:
@@ -102,6 +101,6 @@ def batch_created_notification(sender, instance, created, **kwargs):
                 recipient=student,
                 notification_type="NEW_BATCH_AVAILABLE",
                 title="New Batch Available",
-                message=f"A new batch '{instance.batch_name}' for {instance.course.name} is now open for enrollment.",
+                message=f"A new batch '{instance.batch_name}' is now open for enrollment.",
                 related_batch=instance,
             )

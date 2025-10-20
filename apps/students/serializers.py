@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Course, StudentProfile, StudentBatchEnrollment
+from .models import Course, StudentProfile, StudentEnrollment
 
 
 class CourseSerializer(serializers.ModelSerializer):
@@ -25,6 +25,6 @@ class StudentBatchEnrollmentSerializer(serializers.ModelSerializer):
     final_fee = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
 
     class Meta:
-        model = StudentBatchEnrollment
+        model = StudentEnrollment
         fields = "__all__"
         read_only_fields = ("final_fee", "enrollment_date", "student")

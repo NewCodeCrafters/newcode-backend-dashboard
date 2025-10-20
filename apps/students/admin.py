@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Course, StudentProfile, StudentBatchEnrollment
+from .models import Course, StudentProfile, StudentEnrollment
 
 
 @admin.register(Course)
@@ -20,7 +20,7 @@ class StudentProfileAdmin(admin.ModelAdmin):
     readonly_fields = ("student_id", "created_at", "updated_at")
 
 
-@admin.register(StudentBatchEnrollment)
+@admin.register(StudentEnrollment)
 class StudentBatchEnrollmentAdmin(admin.ModelAdmin):
     list_display = ("student", "batch", "course", "status", "final_fee", "enrollment_date")
     search_fields = ("student__email", "batch__batch_name", "course__name")

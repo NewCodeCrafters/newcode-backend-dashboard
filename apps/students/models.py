@@ -72,7 +72,7 @@ class StudentProfile(BaseModel):
         super().save(*args, **kwargs)
 
 
-class StudentBatchEnrollment(BaseModel):
+class StudentEnrollment(BaseModel):
     student = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,

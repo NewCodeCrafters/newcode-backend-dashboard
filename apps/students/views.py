@@ -1,7 +1,7 @@
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from drf_yasg.utils import swagger_auto_schema
-from .models import Course, StudentProfile, StudentBatchEnrollment
+from .models import Course, StudentProfile, StudentEnrollment
 from .serializers import (
     CourseSerializer,
     StudentProfileSerializer,
@@ -162,7 +162,7 @@ class StudentProfileDetailView(generics.RetrieveUpdateDestroyAPIView):
 # ✅ ENROLLMENTS ENDPOINTS
 # ==============================================
 class EnrollmentListCreateView(generics.ListCreateAPIView):
-    queryset = StudentBatchEnrollment.objects.all()
+    queryset = StudentEnrollment.objects.all()
     serializer_class = StudentBatchEnrollmentSerializer
     permission_classes = [permissions.IsAdminUser]
 
@@ -199,7 +199,7 @@ Automatically creates a `StudentProfile` if one doesn’t exist.
 
 
 class EnrollmentDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = StudentBatchEnrollment.objects.all()
+    queryset = StudentEnrollment.objects.all()
     serializer_class = StudentBatchEnrollmentSerializer
     permission_classes = [permissions.IsAdminUser]
     lookup_field = "pk"

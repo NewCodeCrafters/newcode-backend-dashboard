@@ -1,5 +1,12 @@
 from rest_framework import serializers
 from .models import Course, StudentProfile, StudentEnrollment
+from django.contrib.auth import get_user_model
+from .models import StudentProfile, StudentEnrollment, Course
+from apps.batch.models import Batch
+from django.utils import timezone
+from .models import Course, StudentProfile, StudentBatchEnrollment
+
+
 
 
 class CourseSerializer(serializers.ModelSerializer):
@@ -11,6 +18,8 @@ class CourseSerializer(serializers.ModelSerializer):
         read_only_fields = ("slug", "created_at", "updated_at")
 
 
+# STUDENT PROFILE
+
 class StudentProfileSerializer(serializers.ModelSerializer):
     user = serializers.StringRelatedField(read_only=True)
 
@@ -20,7 +29,19 @@ class StudentProfileSerializer(serializers.ModelSerializer):
         read_only_fields = ("student_id", "created_at", "updated_at", "user")
 
 
-class StudentBatchEnrollmentSerializer(serializers.ModelSerializer):
+
+# COURSE
+
+class CourseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Course
+        fields = ["id", "name", "slug", "description"]
+
+
+
+# STUDENT ENROLLMENT (Unified)
+
+class StudentEnrollmentSerializer(serializers.ModelSerializer):
     student = serializers.StringRelatedField(read_only=True)
     final_fee = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
 

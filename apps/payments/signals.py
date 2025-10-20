@@ -26,7 +26,7 @@ def notify_on_payment_plan_creation(sender, instance, created, **kwargs):
 
         try:
             send_mail(
-                subject,
+                subject, 
                 message,
                 settings.DEFAULT_FROM_EMAIL,
                 [student.email],

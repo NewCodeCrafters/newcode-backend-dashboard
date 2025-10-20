@@ -7,11 +7,6 @@ from drf_spectacular.views import (
     SpectacularRedocView
 )
 
-from rest_framework_simplejwt.views import (
-    TokenObtainPairView,
-    TokenRefreshView,
-)
-
 urlpatterns = [
     path('internal/', admin.site.urls),
     path('api/schema/', SpectacularAPIView.as_view(), name="schema"),
@@ -20,6 +15,6 @@ urlpatterns = [
     path('api/auth/', include('apps.users.urls')),
     path('students/', include('apps.students.urls')),
     path('batches/', include('apps.batch.urls')),
-    path('api/batches/', include('apps.batch.urls')),
     path("notifications/", include("apps.notifications.urls")),
+    path('payments/', include("apps.payments.urls")),
 ]

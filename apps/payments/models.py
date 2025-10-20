@@ -1,86 +1,74 @@
 from django.db import models
-from django.conf import settings
-from apps.students.models import StudentBatchEnrollment
+from django.utils import timezone
 from apps.base.models import BaseModel
+from apps.students.models import StudentProfile
+from django.conf import settings
 
+PAYMENT_FREQUENCY = [
+    ("MONTHLY", "Monthly"),
+    ("TERM", "Per Term"),
+    ("CUSTOM", "Custom"),
+]
 
+INSTALLMENT_STATUS = [
+    ("PENDING", "Pending"),
+    ("PAID", "Paid"),
+    ("OVERDUE", "Overdue"),
+    ("WAIVED", "Waived"),
+]
 
 
 class PaymentPlan(BaseModel):
-    enrollment = models.ForeignKey(StudentBatchEnrollment, on_delete=models.CASCADE, related_name="payment_plans")
-    plan_name = models.CharField(max_length=100)
+    student = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.CASCADE,
+        related_name="payment_plans"
+    )
     total_amount = models.DecimalField(max_digits=10, decimal_places=2)
     number_of_installments = models.PositiveIntegerField()
-    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="created_payment_plans")
+    frequency = models.CharField(max_length=20, choices=PAYMENT_FREQUENCY, default="TERM")
+    start_date = models.DateField(default=timezone.now)
+    is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
 
-    def __str__(self): return f"{self.plan_name} ({self.enrollment.student.get_full_name()})"
+    def __str__(self):
+        return f"{self.student.get_full_name}"
 
-    class Meta:
-        ordering = ["-created_at"]
-        verbose_name = "Payment Plan"
-        verbose_name_plural = "Payment Plans"
+    def generate_installments(self):
+        """
+        Auto-generate installments when plan is created.
+        """
+        from datetime import timedelta
 
-from django.db import models
-from django.utils import timezone
-from apps.students.models import StudentProfile as Student
-from apps.students.models import StudentBatchEnrollment
-from apps.installment.models import Installment  # adjust import if your admin user model is elsewhere
+        installment_amount = self.total_amount / self.number_of_installments
+        current_date = self.start_date
+
+        for i in range(1, self.number_of_installments + 1):
+            Installment.objects.create(
+                payment_plan=self,
+                installment_number=i,
+                amount=installment_amount,
+                due_date=current_date,
+            )
+            current_date += timedelta(days=30)  # You can adjust frequency logic here
 
 
-from django.db import models
-from django.utils import timezone
-from apps.students.models import StudentProfile as Student
-from apps.students.models import StudentBatchEnrollment
-from apps.installment.models import Installment
-
-
-class PaymentTransaction(models.Model):
-    PAYMENT_METHOD_CHOICES = [
-        ('CASH', 'Cash'),
-        ('CARD', 'Card'),
-        ('BANK_TRANSFER', 'Bank Transfer'),
-        ('UPI', 'UPI'),
-        ('CHEQUE', 'Cheque'),
-        ('ONLINE', 'Online'),
-    ]
-
-    PAYMENT_STATUS_CHOICES = [
-        ('SUCCESS', 'Success'),
-        ('PENDING', 'Pending'),
-        ('FAILED', 'Failed'),
-        ('REFUNDED', 'Refunded'),
-    ]
-
-    enrollment = models.ForeignKey(
-        StudentBatchEnrollment,
-        on_delete=models.CASCADE,
-        related_name='payment_transactions'
-    )
-    installment = models.ForeignKey(
-        Installment,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='transactions'
-    )
-    student = models.ForeignKey(
-        Student,
-        on_delete=models.CASCADE,
-        related_name='payment_transactions'
-    )
+class Installment(BaseModel):
+    payment_plan = models.ForeignKey(PaymentPlan, on_delete=models.CASCADE, related_name="installments")
+    installment_number = models.PositiveIntegerField()
     amount = models.DecimalField(max_digits=10, decimal_places=2)
-    payment_method = models.CharField(max_length=50, choices=PAYMENT_METHOD_CHOICES)
-    payment_date = models.DateField(default=timezone.now)
-    payment_status = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES, default='SUCCESS')
-    notes = models.TextField(blank=True, null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    due_date = models.DateField()
+    status = models.CharField(max_length=20, choices=INSTALLMENT_STATUS, default="PENDING")
+    payment_reference = models.CharField(max_length=100, blank=True, null=True)
 
     class Meta:
-        ordering = ['-created_at']
-        verbose_name = "Payment Transaction"
-        verbose_name_plural = "Payment Transactions"
+        unique_together = ("payment_plan", "installment_number")
+        ordering = ["installment_number"]
 
-    
+    def __str__(self):
+        return f"Installment {self.installment_number} - {self.payment_plan.student.full_name}"
+
+    def mark_as_paid(self, reference):
+        self.status = "PAID"
+        self.payment_reference = reference
+        self.save()

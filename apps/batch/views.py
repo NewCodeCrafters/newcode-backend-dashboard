@@ -13,7 +13,7 @@ class BatchListCreateView(generics.GenericAPIView):
     permission_classes = [permissions.IsAdminUser]
 
     @swagger_auto_schema(
-        operation_summary="List all batches (Admin only)"   ,
+        operation_summary="List all batches (Admin only)",
         operation_description="Allows admins to view all batches with optional filters for 'status' and 'name'.",
         responses={200: BatchSerializers(many=True)},
     )

@@ -1,8 +1,10 @@
 from django.db import models
-from django.utils import timezone
+from django.conf import settings
+from apps.students.models import StudentEnrollment
 from apps.base.models import BaseModel
 from apps.students.models import StudentProfile
 from django.conf import settings
+from django.utils import timezone
 
 PAYMENT_FREQUENCY = [
     ("MONTHLY", "Monthly"),

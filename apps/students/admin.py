@@ -2,7 +2,6 @@ from django.contrib import admin
 from .models import Course, StudentProfile, StudentEnrollment
 
 
-
 @admin.register(Course)
 class CourseAdmin(admin.ModelAdmin):
     list_display = ("name", "slug", "duration_in_months", "price", "created_at")

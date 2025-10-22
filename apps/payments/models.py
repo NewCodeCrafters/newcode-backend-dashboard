@@ -1,10 +1,5 @@
 from django.db import models
-<<<<<<< HEAD
-from django.conf import settings
-from apps.students.models import StudentEnrollment
-=======
 from django.utils import timezone
->>>>>>> 45cefa61fb59a6731fb023d3bc59d8ecb9293547
 from apps.base.models import BaseModel
 from apps.students.models import StudentProfile
 from django.conf import settings
@@ -24,16 +19,11 @@ INSTALLMENT_STATUS = [
 
 
 class PaymentPlan(BaseModel):
-<<<<<<< HEAD
-    enrollment = models.ForeignKey(StudentEnrollment, on_delete=models.CASCADE, related_name="payment_plans")
-    plan_name = models.CharField(max_length=100)
-=======
     student = models.ForeignKey(
         settings.AUTH_USER_MODEL, 
         on_delete=models.CASCADE,
         related_name="payment_plans"
     )
->>>>>>> 45cefa61fb59a6731fb023d3bc59d8ecb9293547
     total_amount = models.DecimalField(max_digits=10, decimal_places=2)
     number_of_installments = models.PositiveIntegerField()
     frequency = models.CharField(max_length=20, choices=PAYMENT_FREQUENCY, default="TERM")
@@ -50,56 +40,6 @@ class PaymentPlan(BaseModel):
         """
         from datetime import timedelta
 
-<<<<<<< HEAD
-from django.db import models
-from django.utils import timezone
-from apps.students.models import StudentProfile as Student
-from apps.students.models import StudentEnrollment
-from apps.installment.models import Installment  # adjust import if your admin user model is elsewhere
-
-
-from django.db import models
-from django.utils import timezone
-from apps.students.models import StudentProfile as Student
-from apps.students.models import StudentEnrollment
-from apps.installment.models import Installment
-
-
-class PaymentTransaction(models.Model):
-    PAYMENT_METHOD_CHOICES = [
-        ('CASH', 'Cash'),
-        ('CARD', 'Card'),
-        ('BANK_TRANSFER', 'Bank Transfer'),
-        ('UPI', 'UPI'),
-        ('CHEQUE', 'Cheque'),
-        ('ONLINE', 'Online'),
-    ]
-
-    PAYMENT_STATUS_CHOICES = [
-        ('SUCCESS', 'Success'),
-        ('PENDING', 'Pending'),
-        ('FAILED', 'Failed'),
-        ('REFUNDED', 'Refunded'),
-    ]
-
-    enrollment = models.ForeignKey(
-        StudentEnrollment,
-        on_delete=models.CASCADE,
-        related_name='payment_transactions'
-    )
-    installment = models.ForeignKey(
-        Installment,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='transactions'
-    )
-    student = models.ForeignKey(
-        Student,
-        on_delete=models.CASCADE,
-        related_name='payment_transactions'
-    )
-=======
         installment_amount = self.total_amount / self.number_of_installments
         current_date = self.start_date
 
@@ -116,7 +56,6 @@ class PaymentTransaction(models.Model):
 class Installment(BaseModel):
     payment_plan = models.ForeignKey(PaymentPlan, on_delete=models.CASCADE, related_name="installments")
     installment_number = models.PositiveIntegerField()
->>>>>>> 45cefa61fb59a6731fb023d3bc59d8ecb9293547
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     due_date = models.DateField()
     status = models.CharField(max_length=20, choices=INSTALLMENT_STATUS, default="PENDING")

@@ -1,32 +1,11 @@
-<<<<<<< HEAD
-from rest_framework import status
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.views import APIView
-from drf_yasg.utils import swagger_auto_schema
-
-=======
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from drf_yasg.utils import swagger_auto_schema
 from datetime import date
->>>>>>> 45cefa61fb59a6731fb023d3bc59d8ecb9293547
 from .models import Batch
 from .serializers import BatchSerializers
 
 
-<<<<<<< HEAD
-class BatchListCreateView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    @swagger_auto_schema(
-        operation_summary="List all batches",
-        operation_description="Retrieve all available batches created by any user.",
-        responses={200: BatchSerializers(many=True)},
-    )
-    def get(self, request):
-        batches = Batch.objects.all().order_by('-created_at')
-=======
 
 class BatchListCreateView(generics.GenericAPIView):
     queryset = Batch.objects.all()
@@ -52,7 +31,6 @@ class BatchListCreateView(generics.GenericAPIView):
         if name:
             batches = batches.filter(batch_name__icontains=name)
 
->>>>>>> 45cefa61fb59a6731fb023d3bc59d8ecb9293547
         serializer = BatchSerializers(batches, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 

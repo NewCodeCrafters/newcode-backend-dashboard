@@ -51,9 +51,7 @@ def payment_notification(sender, instance, created, **kwargs):
             f"Start Date: {instance.start_date.strftime('%Y-%m-%d')}\n"
         )
 
-        recipient_list = [staff.email for staff in staff_members if staff.email]
-        if recipient_list:
-            send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, recipient_list, fail_silently=False)
+    
 
         for staff in staff_members:
             Notification.objects.create(
@@ -86,7 +84,6 @@ def batch_created_notification(sender, instance, created, **kwargs):
                 related_batch=instance,
             )
 
-        # ✅ Notify all students (non-staff users)
         student_users = User.objects.filter(is_staff=False).exclude(email__isnull=True)
 
         subject_students = "New Batch Available!"
@@ -104,3 +101,4 @@ def batch_created_notification(sender, instance, created, **kwargs):
                 message=f"A new batch '{instance.batch_name}' is now open for enrollment.",
                 related_batch=instance,
             )
+

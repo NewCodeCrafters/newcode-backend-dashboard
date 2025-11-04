@@ -9,7 +9,7 @@ from .models import PaymentPlan
 def notify_on_payment_plan_creation(sender, instance, created, **kwargs):
     if created:
         student = instance.student
-        full_name = student.get_full_name()  # ✅ Combines first + last name
+        full_name = student.get_full_name()  
 
         subject = f"New Payment Plan Created for {full_name}"
         message = (

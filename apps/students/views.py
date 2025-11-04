@@ -5,12 +5,9 @@ from .models import Course, StudentProfile, StudentEnrollment
 from .serializers import (
     CourseSerializer,
     StudentProfileSerializer,
-    StudentBatchEnrollmentSerializer,
+    StudentEnrollmentSerializer,
 )
 
-# ==============================================
-# ✅ COURSES ENDPOINTS
-# ==============================================
 class CourseListCreateView(generics.ListCreateAPIView):
     queryset = Course.objects.all().order_by("name")
     serializer_class = CourseSerializer
@@ -90,9 +87,6 @@ class CourseDetailView(generics.RetrieveUpdateDestroyAPIView):
         return super().delete(request, *args, **kwargs)
 
 
-# ==============================================
-# ✅ STUDENT PROFILES ENDPOINTS
-# ==============================================
 class StudentProfileListCreateView(generics.ListCreateAPIView):
     queryset = StudentProfile.objects.all()
     serializer_class = StudentProfileSerializer
@@ -158,12 +152,9 @@ class StudentProfileDetailView(generics.RetrieveUpdateDestroyAPIView):
         return super().delete(request, *args, **kwargs)
 
 
-# ==============================================
-# ✅ ENROLLMENTS ENDPOINTS
-# ==============================================
 class EnrollmentListCreateView(generics.ListCreateAPIView):
     queryset = StudentEnrollment.objects.all()
-    serializer_class = StudentBatchEnrollmentSerializer
+    serializer_class = StudentEnrollmentSerializer
     permission_classes = [permissions.IsAdminUser]
 
     @swagger_auto_schema(
@@ -172,7 +163,7 @@ class EnrollmentListCreateView(generics.ListCreateAPIView):
         description="""
 Returns all student enrollments across batches and courses.
         """,
-        responses={200: StudentBatchEnrollmentSerializer(many=True)},
+        responses={200: StudentEnrollmentSerializer(many=True)},
     )
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
@@ -185,8 +176,8 @@ Allows an **admin** to enroll a student into a batch and course.
 
 Automatically creates a `StudentProfile` if one doesn’t exist.
         """,
-        request_body=StudentBatchEnrollmentSerializer,
-        responses={201: StudentBatchEnrollmentSerializer()},
+        request_body=StudentEnrollmentSerializer,
+        responses={201: StudentEnrollmentSerializer()},
     )
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -200,7 +191,7 @@ Automatically creates a `StudentProfile` if one doesn’t exist.
 
 class EnrollmentDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = StudentEnrollment.objects.all()
-    serializer_class = StudentBatchEnrollmentSerializer
+    serializer_class = StudentEnrollmentSerializer
     permission_classes = [permissions.IsAdminUser]
     lookup_field = "pk"
 

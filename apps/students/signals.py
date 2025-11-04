@@ -6,21 +6,13 @@ from .models import StudentEnrollment
 
 @receiver(post_save, sender=StudentEnrollment)
 def batch_completion_notification(sender, instance, created, **kwargs):
-    """
-    Notify students when their batch is ending or completed.
-    """
     today = timezone.now().date()
-    
-    # Only notify if the batch is ending in the current month
     if instance.completion_date and not instance.is_completed:
         months_remaining = (instance.completion_date - today).days // 30
         if months_remaining == 0:
-            # Mark as completed
             instance.is_completed = True
             instance.status = "COMPLETED"
             instance.save(update_fields=['is_completed', 'status'])
-
-            # Send notification email
             send_mail(
                 subject="Batch Completed",
                 message=f"Hello {instance.student.user.get_full_name()}, your batch for {instance.course.name} has ended this month.",
@@ -29,7 +21,6 @@ def batch_completion_notification(sender, instance, created, **kwargs):
                 fail_silently=True,
             )
         elif months_remaining == 1:
-            # Notify batch is ending next month
             send_mail(
                 subject="Batch Ending Soon",
                 message=f"Hello {instance.student.user.get_full_name()}, your batch for {instance.course.name} is ending next month.",

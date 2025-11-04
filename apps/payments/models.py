@@ -37,9 +37,6 @@ class PaymentPlan(BaseModel):
         return f"{self.student.get_full_name}"
 
     def generate_installments(self):
-        """
-        Auto-generate installments when plan is created.
-        """
         from datetime import timedelta
 
         installment_amount = self.total_amount / self.number_of_installments
@@ -52,7 +49,7 @@ class PaymentPlan(BaseModel):
                 amount=installment_amount,
                 due_date=current_date,
             )
-            current_date += timedelta(days=30)  # You can adjust frequency logic here
+            current_date += timedelta(days=30)  
 
 
 class Installment(BaseModel):

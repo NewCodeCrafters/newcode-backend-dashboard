@@ -21,9 +21,6 @@ USER_NOTIFICATION_TYPE_CHOICES = [
 ]
 
 
-# ==========================
-# ADMIN NOTIFICATIONS MODEL
-# ==========================
 class AdminNotification(models.Model):
     admin = models.ForeignKey(
         User,

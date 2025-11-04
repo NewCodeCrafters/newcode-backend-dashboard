@@ -10,9 +10,6 @@ class CourseSerializer(serializers.ModelSerializer):
         fields = "__all__"
         read_only_fields = ("slug", "created_at", "updated_at")
 
-
-# STUDENT PROFILE
-
 class StudentProfileSerializer(serializers.ModelSerializer):
     user = serializers.StringRelatedField(read_only=True)
 
@@ -21,18 +18,10 @@ class StudentProfileSerializer(serializers.ModelSerializer):
         fields = "__all__"
         read_only_fields = ("student_id", "created_at", "updated_at", "user")
 
-
-
-# COURSE
-
 class CourseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Course
         fields = ["id", "name", "slug", "description"]
-
-
-
-# STUDENT ENROLLMENT (Unified)
 
 class StudentEnrollmentSerializer(serializers.ModelSerializer):
     student = serializers.StringRelatedField(read_only=True)
